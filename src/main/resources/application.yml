@@ -1,0 +1,30 @@
+server:
+  port: 7022
+  servlet:
+    contextPath: /playandgo-hsc
+
+spring:
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URL:}
+      auto-index-creation: true
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+
+  security:
+    oauth2:
+      client:
+        registration:
+          oauthprovider: 
+            authorization-grant-type: client_credentials
+            client-id:  ${AAC_CLIENT_ID:}
+            client-secret:  ${AAC_CLIENT_SECRET:}
+        provider:
+          oauthprovider:
+            token-uri: ${AAC_TOKEN_URI:}
+            issuer-uri: ${AAC_ISSUER_URI:}
+
+playandgo:
+  engine:
+    uri: ${PLAYANDGO_ENGINE_URI:} 
