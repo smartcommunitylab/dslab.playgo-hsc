@@ -27,6 +27,8 @@ public class Initiative {
 	@Id
 	private String initiativeId;
 	
+	private String type;
+	
 	private Campaign campaign;
 	private Boolean canCreate;
 	private Boolean canEdit;
@@ -77,5 +79,10 @@ public class Initiative {
 	public void setMinTeamSize(Integer minTeamSize) {
 		this.minTeamSize = minTeamSize;
 	}
-
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
 }

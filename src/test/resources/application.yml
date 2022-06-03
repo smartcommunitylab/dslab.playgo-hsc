@@ -20,6 +20,7 @@ spring:
           oauthprovider:
             token-uri: https://aac.platform.smartcommunitylab.it/oauth/token
             issuer-uri: https://aac.platform.smartcommunitylab.it
+            authorization-uri: https://aac.platform.smartcommunitylab.it/oauth/authorize 
           
 playandgo:
   engine:

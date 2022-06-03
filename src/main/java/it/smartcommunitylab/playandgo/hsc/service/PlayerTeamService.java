@@ -174,12 +174,13 @@ public class PlayerTeamService {
 			}
 			team = teamRepo.save(team);
 		} catch (Exception e) {
+			logger.error("Failed to subscribe: " + e.getMessage(), e);
 			// subscription / save failed: undo subscribe
 			for (String nickName: toAdd) {
 				try {
 					engineService.unsubscribe(initiative.getInitiativeId(), nickName);
 				} catch (Exception e1) {
-					logger.error("Failed to clean subscription", e);
+					logger.error("Failed to clean subscription "+ e1.getMessage());
 				}
 			}
 			throw e;
@@ -268,6 +269,23 @@ public class PlayerTeamService {
 		});
 	}
 	
+
+
+	/**
+	 * @param initiativeId
+	 * @param initiative
+	 * @return
+	 */
+	public Initiative saveInitiative(String initiativeId, Initiative initiative) {
+		Initiative old = initiativeRepo.findById(initiativeId).orElse(null);
+		if (old != null) {
+			old.setBonus(initiative.getBonus());
+			old.setBonusThreshold(initiative.getBonusThreshold());
+			old.setMinTeamSize(initiative.getMinTeamSize());
+			return initiativeRepo.save(old);
+		}
+		return null;
+	}
 	public List<PlayerTeam> getUserTeamsForInitiative(String initiativeId) {
 		List<Initiative> initiatives = getInitativesForManager();
 		if (initiatives.stream().anyMatch(i -> i.getInitiativeId().equals(initiativeId))) {
@@ -323,6 +341,7 @@ public class PlayerTeamService {
 				initiative.setBonus(300d);
 				initiative.setBonusThreshold(90d);
 				initiative.setMinTeamSize(10);
+				initiative.setType("hsc");
 			}
 			initiative.setCampaign(c);
 			initiativeRepo.save(initiative);
@@ -395,4 +414,5 @@ public class PlayerTeamService {
 		}
 		
 	}
+
 }

@@ -84,7 +84,7 @@ public class PlayGoEngineClientService {
 		ParameterizedTypeReference<RestPage<PlayerInfo>> ref = new ParameterizedTypeReference<RestPage<PlayerInfo>>() {};
 		return 
 		webClient.get()
-		.uri("/api/ext/territory/players?territory="+territory + "&txt="+txt)
+		.uri("/api/ext/territory/players?territory="+territory + "&txt="+(txt == null ? "" : txt.trim()))
 		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 		.retrieve()
 		.bodyToMono(ref)
@@ -95,7 +95,7 @@ public class PlayGoEngineClientService {
 		ParameterizedTypeReference<List<Campaign>> ref = new ParameterizedTypeReference<List<Campaign>>() {};
 		return 
 		webClient.get()
-		.uri("/api/campaign?type=school")
+		.uri("/publicapi/campaign?type=school")
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(ref)
@@ -105,6 +105,8 @@ public class PlayGoEngineClientService {
 	public CampaignSubscription subscribe(String campaignId, String nickName) {
 		return webClient.post()
 		.uri("/api/ext/campaign/subscribe/territory?campaignId="+campaignId+"&nickname="+nickName)
+		.contentType(MediaType.APPLICATION_JSON)
+		.bodyValue(Collections.emptyMap())
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(CampaignSubscription.class)

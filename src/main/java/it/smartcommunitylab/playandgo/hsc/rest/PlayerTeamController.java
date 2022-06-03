@@ -86,6 +86,20 @@ public class PlayerTeamController {
 	public ResponseEntity<PlayerTeam> saveTeam(@PathVariable String initiativeId, @RequestBody PlayerTeam team) throws HSCError {
 		return ResponseEntity.ok(teamService.saveTeam(initiativeId, team));
 	}
+	@PutMapping("/api/initiatives/{initiativeId}")
+	public ResponseEntity<Initiative> saveInitiative(@PathVariable String initiativeId, @RequestBody Initiative initiative) throws HSCError {
+		return ResponseEntity.ok(teamService.saveInitiative(initiativeId, initiative));
+	}
+	@PutMapping("/api/initiatives/{initiativeId}/create/{value}")
+	public ResponseEntity<Initiative> setCreate(@PathVariable String initiativeId, @PathVariable Boolean value) throws HSCError {
+		teamService.setInitiativeCreate(initiativeId, value);
+		return ResponseEntity.ok(teamService.getInitiative(initiativeId));
+	}
+	@PutMapping("/api/initiatives/{initiativeId}/edit/{value}")
+	public ResponseEntity<Initiative> setEdit(@PathVariable String initiativeId, @PathVariable Boolean value) throws HSCError {
+		teamService.setInitiativeEdit(initiativeId, value);
+		return ResponseEntity.ok(teamService.getInitiative(initiativeId));
+	}
 	@DeleteMapping("/api/initiatives/{initiativeId}/team/{teamId}")
 	public ResponseEntity<Void> deleteTeam(@PathVariable String initiativeId, @PathVariable String teamId) throws HSCError {
 		teamService.deleteTeam(initiativeId, teamId);
