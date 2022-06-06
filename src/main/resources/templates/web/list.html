@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <!-- required libraries -->
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="lib/axios.min.js"></script>
 <script type="text/javascript" th:inline="javascript">
     /*<![CDATA[*/
       AUTH_ENDPOINT = [[${authEndpoint}]];
@@ -22,7 +22,7 @@
     
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet"/>
-  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet"/>
+  <link href="lib/vuetify.min.css" rel="stylesheet"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"/>
 
   <script type="text/javascript" th:inline="javascript">
@@ -130,8 +130,8 @@
 </div>
 
 
-	<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+	<script src="lib/vue.min.js"></script>
+  <script src="lib/vuetify.min.js"></script>
   <script>
     new Vue({
       el: '#app',
