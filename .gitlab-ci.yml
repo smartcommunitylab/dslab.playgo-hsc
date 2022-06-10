@@ -4,18 +4,18 @@ services:
   - docker:dind
 
 stages:
-  - test
   - build
   - container-build
-  - container-scan
   - deploy
+  - test
+  - container-scan
 
 variables:
   SECURE_LOG_LEVEL: info
   DS_JAVA_VERSION: 11
   DOCKER_DRIVER: overlay
-  CONTAINER_IMAGE: smartcommunitylab/playngo-hsc-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
-  CONTAINER_IMAGE_LATEST: smartcommunitylab/playngo-hsc:v2-$CI_COMMIT_REF_NAME-latest
+  CONTAINER_IMAGE: smartcommunitylab/playngo-hsc:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
+  CONTAINER_IMAGE_LATEST: smartcommunitylab/playngo-hsc:$CI_COMMIT_REF_NAME-latest
   # MAVEN_CLI_OPTS: -DskipTests --batch-mode
   SAST_JAVA_VERSION: 11
 
@@ -55,7 +55,7 @@ include:
 container_scanning:
   stage: container-scan
   variables:
-    DOCKER_IMAGE: smartcommunitylab/playngo-hsc:v2-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
+    DOCKER_IMAGE: smartcommunitylab/playngo-hsc:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
     DOCKERFILE_PATH: "Dockerfile"
     GIT_STRATEGY: fetch
     DOCKER_USER: ""
