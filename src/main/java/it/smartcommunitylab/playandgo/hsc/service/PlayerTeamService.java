@@ -18,6 +18,7 @@ package it.smartcommunitylab.playandgo.hsc.service;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -170,7 +171,9 @@ public class PlayerTeamService {
 		try {
 			// try to subscribe
 			for (String nickName: toAdd) {
-				engineService.subscribe(initiative.getInitiativeId(), nickName);
+				Map<String, Object> data = new HashMap<>(team.getCustomData());
+				data.put("teamId", team.getId());
+				engineService.subscribe(initiative.getInitiativeId(), nickName, team.getCustomData());
 			}
 			team = teamRepo.save(team);
 		} catch (Exception e) {
@@ -387,7 +390,7 @@ public class PlayerTeamService {
 		private String id;
 		private Double score;
 		private int position;
-		private Map<String, String> customData;
+		private Map<String, Object> customData;
 		public String getId() {
 			return id;
 		}
@@ -400,10 +403,10 @@ public class PlayerTeamService {
 		public void setScore(Double score) {
 			this.score = score;
 		}
-		public Map<String, String> getCustomData() {
+		public Map<String, Object> getCustomData() {
 			return customData;
 		}
-		public void setCustomData(Map<String, String> customData) {
+		public void setCustomData(Map<String, Object> customData) {
 			this.customData = customData;
 		}
 		public int getPosition() {

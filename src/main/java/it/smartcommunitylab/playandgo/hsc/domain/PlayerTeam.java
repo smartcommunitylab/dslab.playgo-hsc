@@ -34,7 +34,7 @@ public class PlayerTeam {
 	private Set<String> members;
 	private Integer expected;
 	
-	private Map<String, String> customData;
+	private Map<String, Object> customData;
 	
 	public String getId() {
 		return id;
@@ -54,10 +54,10 @@ public class PlayerTeam {
 	public void setMembers(Set<String> members) {
 		this.members = members;
 	}
-	public Map<String, String> getCustomData() {
+	public Map<String, Object> getCustomData() {
 		return customData;
 	}
-	public void setCustomData(Map<String, String> customData) {
+	public void setCustomData(Map<String, Object> customData) {
 		this.customData = customData;
 	}
 	public Integer getExpected() {

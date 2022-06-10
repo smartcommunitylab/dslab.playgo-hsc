@@ -56,7 +56,7 @@ public class PlayerTeamController {
 	}
 
 	@GetMapping("/api/initiatives/{initiativeId}/teams")
-	public ResponseEntity<List<PlayerTeam>> getMyTeams(@PathVariable String initiativeId) {
+	public ResponseEntity<List<PlayerTeam>> getMyTeamsAsManager(@PathVariable String initiativeId) {
 		return ResponseEntity.ok(teamService.getUserTeamsForInitiative(initiativeId));
 	}
 	

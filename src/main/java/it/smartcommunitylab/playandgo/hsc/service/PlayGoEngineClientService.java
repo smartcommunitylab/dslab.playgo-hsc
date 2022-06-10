@@ -102,11 +102,11 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 
-	public CampaignSubscription subscribe(String campaignId, String nickName) {
+	public CampaignSubscription subscribe(String campaignId, String nickName, Map<String, Object> campaignData) {
 		return webClient.post()
 		.uri("/api/ext/campaign/subscribe/territory?campaignId="+campaignId+"&nickname="+nickName)
 		.contentType(MediaType.APPLICATION_JSON)
-		.bodyValue(Collections.emptyMap())
+		.bodyValue(campaignData == null ? Collections.emptyMap() : campaignData)
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(CampaignSubscription.class)
