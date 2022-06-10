@@ -51,7 +51,10 @@
 <div id="app">
   <v-app> 
     <v-app-bar app >
-      <v-toolbar-title th:text="#{teammgmt.title}">Team Management</v-toolbar-title>
+      <v-btn icon>
+        <v-icon @click="back()">mdi-chevron-left</v-icon>
+      </v-btn>
+      <v-toolbar-title><span  th:text="#{teammgmt.title}">Team Management</span> - {{initiative.campaign.name}}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn icon>
         <v-icon @click="logout()">mdi-logout</v-icon>
@@ -309,6 +312,9 @@
                   this.deleteDialog = false;
                   this.load();
               });
+    	  },
+    	  back() {
+    		  history.back();
     	  }
       }
     })

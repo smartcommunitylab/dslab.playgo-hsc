@@ -76,6 +76,9 @@
                 <th th:text="#{initiativelist.id}">ID</th>
                 <th th:text="#{initiativelist.name}">Name</th>
                 <th th:text="#{initiativelist.type}">Type</th>
+                <th th:text="#{initiativelist.from}">From</th>
+                <th th:text="#{initiativelist.to}">To</th>
+                <th th:text="#{initiativelist.active}">Active</th>
                 <th th:text="#{initiativelist.cancreate}">Can create team</th>
                 <th th:text="#{initiativelist.canedit}">Can create team</th>
                 <th></th>
@@ -86,6 +89,9 @@
                 <td>{{initiative.initiativeId}}</td>
                 <td><a :href="'./web/'+initiative.type+'/'+initiative.initiativeId+ '/mgmt'">{{initiative.campaign.name}}</a></td>
                 <td>{{initiative.type}}</td>
+                <td>{{dateFormat(initiative.campaign.dateFrom)}}</td>  
+                <td>{{dateFormat(initiative.campaign.dateTo)}}</td>
+                <td><v-icon>{{initiative.campaign.active ? 'mdi-check': 'mdi-close-circle'}}</v-icon></td>
                 <td><v-btn @click="toggleCreate(initiative)" icon><v-icon>{{initiative.canCreate ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>
                 <td><v-btn @click="toggleEdit(initiative)" icon><v-icon>{{initiative.canEdit ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>
                 <td><v-btn @click="doEdit(initiative)" color="primary"><v-icon>mdi-pencil</v-icon></v-btn></td>
@@ -132,6 +138,7 @@
 
 	<script src="lib/vue.min.js"></script>
   <script src="lib/vuetify.min.js"></script>
+  <script src="lib/luxon.min.js"></script>
   <script>
     new Vue({
       el: '#app',
@@ -158,7 +165,7 @@
       computed: {
     	  valid() {
     		  return this.initiative && this.initiative.bonusThreshold > 0 && this.initiative.bonusThreshold <= 100 && this.initiative.bonus > 0 && this.initiative.minTeamSize > 0;  
-    	  }
+    	  },
       },
       methods: {
     	  load() {
@@ -201,8 +208,10 @@
                this.editDialog = false;
                this.load();
              });         
+         },
+         dateFormat(ts) {
+        	 return luxon.DateTime.fromMillis(ts).toFormat('dd/LL/yyyy');
          }
-         
       }
     })
   </script>
