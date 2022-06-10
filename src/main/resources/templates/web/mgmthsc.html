@@ -36,7 +36,8 @@
         var token = sessionStorage.getItem('access_token');
         expiresIn = sessionStorage.getItem('access_token_expires_in') || 0;
         if (!token || expiresIn < new Date().getTime()) {
-          var redirect = window.location;
+          var redirect = window.location.href;
+          redirect = redirect.substr(0,redirect.indexOf('/web/')+4);
           window.location.href = AUTH_ENDPOINT + '?response_type=token&client_id='+CLIENT_ID+'&redirect_uri=' + redirect;
           delete sessionStorage.access_token;
           delete sessionStorage.access_token_expires_in;
@@ -223,8 +224,17 @@
       methods: {
     	  getCandidates: function(val) {
            axios.get(`../../../api/initiatives/${INITIATIVE.initiativeId}/team/candidates?txt=${!!val ? val :''}`, conf).then((data) => {
-             this.teamCandidates = data.data.content.filter(c => !c.subscribed || this.currTeam && this.currTeam.members.indexOf(c.nickname) >= 0).map(c => c.nickname);
-             console.log(this.teamCandidates);
+        	   // disabled if subscribed by another team
+             var remote = data.data.content.map(c => ({text: c.nickname, value: c.nickname, disabled: c.subscribed && (!this.currTeam || this.currTeam.members.indexOf(c.nickname) < 0)}));
+             if (this.currTeam && this.currTeam.members) {
+            	 // append also current members to appear as chips
+            	 this.currTeam.members.forEach(m => {
+            		  if (!remote.some(c => c.value == m)) {
+            			  remote.push({text: m, value: m});
+            		  }
+           	   });            	 
+             }
+             this.teamCandidates = remote;
            });                             		  
     	  },
     	  logout() {
@@ -250,14 +260,13 @@
     	  createNew() {
     		  this.currTeam = {members: [], customData: {}};
     		  this.dialog = true;
-    		  this.teamCandidates = [];
           this.getCandidates();
     	  },
     	  editTeam(team) {
     		  var editTeam = Object.assign({}, team);
     		  this.currTeam = editTeam;
           this.dialog = true;    		  
-          this.teamCandidates =  [];
+          this.getCandidates();
     	  },
     	  closeEdit() {
           this.currTeam = {members: [], customData: {}};
@@ -289,7 +298,7 @@
           });
     	  },
     	  view(team) {
-    		  window.open(`../web/hsc/${INITIATIVE.initiativeId}`, '_blank');
+    		  window.open(`../../../web/hsc/${INITIATIVE.initiativeId}`, '_blank');
     	  },
     	  deleteTeam(team) {
     		  this.currTeam = team;
