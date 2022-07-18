@@ -43,6 +43,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
+import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
@@ -168,6 +169,7 @@ public class PlayerTeamService {
 		}
 		validate(team, initiative);
 		
+		/* DISABLED: NO SUBSCRIPTION BY MANAGER, JUST CONFIGURATION SAVE
 		try {
 			// try to subscribe
 			for (String nickName: toAdd) {
@@ -188,6 +190,9 @@ public class PlayerTeamService {
 			}
 			throw e;
 		}
+		*/
+		team = teamRepo.save(team);
+
 		// remove not used
 		for (String nickName: toRemove) {
 			try {
@@ -303,6 +308,16 @@ public class PlayerTeamService {
 			syncExternalCampaigns();
 		}
 	}
+
+	public  List<PlayerTeam> getPublicTeams(String initiative) {
+		List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiative);
+		teams.forEach(t -> {
+			t.setOwner(null);
+			t.setExpected(0);
+			t.setMembers(null);
+		});
+		return teams;
+	}
 	
 	public  List<TeamClassification> getLeaderboard(String initiative) {
 		List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiative);
@@ -330,6 +345,99 @@ public class PlayerTeamService {
 		
 		return list;
 	}
+	
+
+	/**
+	 * @param initiativeId
+	 * @param dateFrom
+	 * @param dateTo
+	 * @return
+	 */
+	public List<TeamClassification> getLeaderboard(String initiativeId, String dateFrom, String dateTo) {
+		List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiativeId);
+		Map<String, CampaignGroupPlacing> map = engineService.getPositions(initiativeId, dateFrom, dateTo)
+				.stream().collect(Collectors.toMap(p -> p.getGroupId(), p -> p));
+
+		List<TeamClassification>  res = teams.stream().map(t -> {
+			TeamClassification tc = new TeamClassification();
+			tc.setId(t.getId());
+			tc.setCustomData(t.getCustomData());
+			CampaignGroupPlacing p = map.get(tc.getId());
+			if (p != null) {
+				tc.setPosition(p.getPosition());
+				tc.setScore(p.getValue());
+			} else {
+				tc.setPosition(0);
+				tc.setScore(0d);
+			}
+			return tc;
+		}).collect(Collectors.toList());
+		res.sort((a,b) -> a.getPosition() - b.getPosition());
+		return res;
+	}
+	
+	/**
+	 * Subscribe to the team: check nickname in the list of the members and then subscribe to engine
+	 * @param initiativeId
+	 * @param teamId
+	 * @param player
+	 * @return
+	 * @throws OperationNotPermittedException 
+	 * @throws NotFoundException 
+	 */
+	public PlayerInfo subscribeCampaign(String initiativeId, String teamId) throws OperationNotPermittedException, NotFoundException {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}
+		String subj = securityHelper.getCurrentSubject();
+		PlayerInfo ext = engineService.getPlayer(subj, initiative.getCampaign().getTerritoryId());
+		if (ext == null) {
+			throw new OperationNotPermittedException("PLAYER");
+		}
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if (team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		if (!team.getMembers().contains(ext.getNickname())) {
+			throw new OperationNotPermittedException("MEMBER");
+		}
+		Map<String, Object> data = new HashMap<>(team.getCustomData());
+		data.put("teamId", team.getId());
+		engineService.subscribe(initiativeId, ext.getNickname(), team.getCustomData());
+		return ext;
+	}
+	
+	/**
+	 * Subscribe to the team: check nickname in the list of the members and then subscribe to engine
+	 * @param initiativeId
+	 * @param teamId
+	 * @param player
+	 * @return
+	 * @throws OperationNotPermittedException 
+	 * @throws NotFoundException 
+	 */
+	public void unsubscribeCampaign(String initiativeId, String teamId) throws OperationNotPermittedException, NotFoundException {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}
+		String subj = securityHelper.getCurrentSubject();
+		PlayerInfo ext = engineService.getPlayer(subj, initiative.getCampaign().getTerritoryId());
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if (team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		if (!team.getMembers().contains(ext.getNickname())) {
+			throw new OperationNotPermittedException("MEMBER");
+		}
+		Map<String, Object> data = new HashMap<>(team.getCustomData());
+		data.put("teamId", team.getId());
+		engineService.unsubscribe(initiativeId, ext.getNickname());
+		team.getMembers().remove(ext.getNickname());
+		teamRepo.save(team);
+	}
+	
 	
 	@Scheduled(fixedDelay=1000*60*60*24, initialDelay = 1000*60*60) 
 	public void syncExternalCampaigns() {
@@ -417,5 +525,8 @@ public class PlayerTeamService {
 		}
 		
 	}
+
+
+
 
 }

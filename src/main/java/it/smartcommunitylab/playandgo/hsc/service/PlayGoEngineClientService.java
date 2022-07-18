@@ -38,6 +38,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
+import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignSubscription;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;
@@ -69,6 +70,18 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<CampaignGroupPlacing> getPositions(String campaignId, String dateFrom, String dateTo) {
+		ParameterizedTypeReference<List<CampaignGroupPlacing>> ref = new ParameterizedTypeReference<List<CampaignGroupPlacing>>() {};
+		return 
+		webClient.get()
+		.uri("/api/ext/campaign/game/group/placing?campaignId="+campaignId)
+		.attributes(clientRegistrationId("oauthprovider"))
+		.retrieve()
+		.bodyToMono(ref)
+		.block();
+	}
+	
 	public List<UserRole> getUserRoles() {
 		ParameterizedTypeReference<List<UserRole>> ref = new ParameterizedTypeReference<List<UserRole>>() {};
 		return 
@@ -88,6 +101,15 @@ public class PlayGoEngineClientService {
 		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 		.retrieve()
 		.bodyToMono(ref)
+		.block();
+	}
+	public PlayerInfo getPlayer(String playerId, String territory) {
+		return 
+		webClient.get()
+		.uri("/api/ext/territory/players/"+playerId+"?territory="+territory)
+		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
+		.retrieve()
+		.bodyToMono(PlayerInfo.class)
 		.block();
 	}
 	

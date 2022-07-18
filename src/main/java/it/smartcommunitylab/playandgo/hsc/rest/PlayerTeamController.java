@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.ApiParam;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
@@ -51,8 +52,25 @@ public class PlayerTeamController {
 
 	@GetMapping("/publicapi/{initiativeId}/board")
 	public 
-	ResponseEntity<List<TeamClassification>> webBoardAPI(@PathVariable String initiativeId) {
+	ResponseEntity<List<TeamClassification>> webBoardAPI(
+			@PathVariable String initiativeId) {
 		return ResponseEntity.ok(teamService.getLeaderboard(initiativeId));
+	}
+
+	@GetMapping("/publicapi/{initiativeId}/board")
+	public 
+	ResponseEntity<List<TeamClassification>> webBoardAPI(
+			@PathVariable String initiativeId,
+			@RequestParam @ApiParam(value = "yyyy-MM-dd") String dateFrom,
+			@RequestParam @ApiParam(value = "yyyy-MM-dd") String dateTo) 
+	{
+		return ResponseEntity.ok(teamService.getLeaderboard(initiativeId, dateFrom, dateTo));
+	}
+
+	@GetMapping("/publicapi/{initiativeId}/teams")
+	public 
+	ResponseEntity<List<PlayerTeam>> webTeamsAPI(@PathVariable String initiativeId) {
+		return ResponseEntity.ok(teamService.getPublicTeams(initiativeId));
 	}
 
 	@GetMapping("/api/initiatives/{initiativeId}/teams")
