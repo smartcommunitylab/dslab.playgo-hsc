@@ -57,7 +57,7 @@ public class PlayerTeamController {
 		return ResponseEntity.ok(teamService.getLeaderboard(initiativeId));
 	}
 
-	@GetMapping("/publicapi/{initiativeId}/board")
+	@GetMapping("/publicapi/{initiativeId}/board/stats")
 	public 
 	ResponseEntity<List<TeamClassification>> webBoardAPI(
 			@PathVariable String initiativeId,

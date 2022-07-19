@@ -47,6 +47,7 @@ import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
+import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeamStats;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;
 import it.smartcommunitylab.playandgo.hsc.error.DataException;
 import it.smartcommunitylab.playandgo.hsc.error.HSCError;
@@ -438,6 +439,29 @@ public class PlayerTeamService {
 		teamRepo.save(team);
 	}
 	
+
+
+	/**
+	 * @param initiativeId
+	 * @param teamId
+	 * @param dateTo 
+	 * @param dateFrom 
+	 * @param groupMode 
+	 * @return
+	 * @throws NotFoundException 
+	 */
+	public PlayerTeamStats getPlayerTeamStats(String initiativeId, String teamId, String groupMode, String dateFrom, String dateTo) throws NotFoundException {
+		PlayerTeamStats stats = new PlayerTeamStats();
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}
+		String subj = securityHelper.getCurrentSubject();
+		PlayerInfo ext = engineService.getPlayer(subj, initiative.getCampaign().getTerritoryId());
+		
+		return stats;
+	}
+
 	
 	@Scheduled(fixedDelay=1000*60*60*24, initialDelay = 1000*60*60) 
 	public void syncExternalCampaigns() {
@@ -460,14 +484,14 @@ public class PlayerTeamService {
 	}
 	
 	private boolean isAdmin(List<UserRole> roles) {
-		return roles != null && roles.stream().anyMatch(r -> r.getRole().equals(UserRole.Role.admin));
+		return roles != null && roles.stream().anyMatch(r -> UserRole.Role.admin.equals(r.getRole()));
 	}
 	
 	private List<String> getTerritories(List<UserRole> roles) {
-		return roles.stream().filter(r -> r.getRole().equals(UserRole.Role.territory)).map(r -> r.getEntityId()).collect(Collectors.toList());
+		return roles.stream().filter(r -> UserRole.Role.territory.equals(r.getRole())).map(r -> r.getEntityId()).collect(Collectors.toList());
 	}
 	private List<String> getCampaigns(List<UserRole> roles) {
-		return roles.stream().filter(r -> r.getRole().equals(UserRole.Role.campaign)).map(r -> r.getEntityId()).collect(Collectors.toList());
+		return roles.stream().filter(r -> UserRole.Role.campaign.equals(r.getRole())).map(r -> r.getEntityId()).collect(Collectors.toList());
 	}
 	
 	private Double computeTeamScore(String initiativeId, String teamId) {
