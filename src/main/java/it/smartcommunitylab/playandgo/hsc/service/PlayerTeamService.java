@@ -44,6 +44,7 @@ import com.google.common.cache.LoadingCache;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
+import it.smartcommunitylab.playandgo.hsc.domain.GameStats;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
@@ -377,6 +378,20 @@ public class PlayerTeamService {
 		return res;
 	}
 	
+
+	/**
+	 * @param initiativeId
+	 * @param teamId
+	 * @param groupMode
+	 * @param dateFrom
+	 * @param dateTo
+	 * @return
+	 */
+	public List<GameStats> getTeamStats(String initiativeId, String teamId, String groupMode, String dateFrom, String dateTo) {
+		return engineService.getTeamStats(initiativeId, teamId, groupMode, dateFrom, dateTo);
+	}
+
+	
 	/**
 	 * Subscribe to the team: check nickname in the list of the members and then subscribe to engine
 	 * @param initiativeId
@@ -549,8 +564,5 @@ public class PlayerTeamService {
 		}
 		
 	}
-
-
-
 
 }

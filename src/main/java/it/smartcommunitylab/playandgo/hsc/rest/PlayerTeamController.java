@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.ApiParam;
+import it.smartcommunitylab.playandgo.hsc.domain.GameStats;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
@@ -52,14 +53,14 @@ public class PlayerTeamController {
 
 	@GetMapping("/publicapi/{initiativeId}/board")
 	public 
-	ResponseEntity<List<TeamClassification>> webBoardAPI(
+	ResponseEntity<List<TeamClassification>> globalBoard(
 			@PathVariable String initiativeId) {
 		return ResponseEntity.ok(teamService.getLeaderboard(initiativeId));
 	}
 
 	@GetMapping("/publicapi/{initiativeId}/board/stats")
 	public 
-	ResponseEntity<List<TeamClassification>> webBoardAPI(
+	ResponseEntity<List<TeamClassification>> globalBoardStats(
 			@PathVariable String initiativeId,
 			@RequestParam @ApiParam(value = "yyyy-MM-dd") String dateFrom,
 			@RequestParam @ApiParam(value = "yyyy-MM-dd") String dateTo) 
@@ -67,6 +68,18 @@ public class PlayerTeamController {
 		return ResponseEntity.ok(teamService.getLeaderboard(initiativeId, dateFrom, dateTo));
 	}
 
+	@GetMapping("/publicapi/{initiativeId}/teams/{teamId}/stats")
+	public 
+	ResponseEntity<List<GameStats>> teamStats(
+			@PathVariable String initiativeId,
+			@PathVariable String teamId,
+			@RequestParam String groupMode,
+			@RequestParam @ApiParam(value = "yyyy-MM-dd") String dateFrom,
+			@RequestParam @ApiParam(value = "yyyy-MM-dd") String dateTo) 
+	{
+		return ResponseEntity.ok(teamService.getTeamStats(initiativeId, teamId, groupMode, dateFrom, dateTo));
+	}
+	
 	@GetMapping("/publicapi/{initiativeId}/teams")
 	public 
 	ResponseEntity<List<PlayerTeam>> webTeamsAPI(@PathVariable String initiativeId) {

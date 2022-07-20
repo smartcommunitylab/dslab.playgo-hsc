@@ -40,6 +40,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignSubscription;
+import it.smartcommunitylab.playandgo.hsc.domain.GameStats;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;
 import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
@@ -75,7 +76,7 @@ public class PlayGoEngineClientService {
 		ParameterizedTypeReference<List<CampaignGroupPlacing>> ref = new ParameterizedTypeReference<List<CampaignGroupPlacing>>() {};
 		return 
 		webClient.get()
-		.uri("/api/ext/campaign/game/group/placing?campaignId="+campaignId)
+		.uri("/api/ext/campaign/game/group/placing?campaignId="+campaignId+"&dateFrom="+dateFrom+"&dateTo="+dateTo)
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(ref)
@@ -124,6 +125,26 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 
+
+	/**
+	 * @param initiativeId
+	 * @param teamId
+	 * @param groupMode
+	 * @param dateFrom
+	 * @param dateTo
+	 * @return
+	 */
+	public List<GameStats> getTeamStats(String initiativeId, String teamId, String groupMode, String dateFrom,
+			String dateTo) {
+		ParameterizedTypeReference<List<GameStats>> ref = new ParameterizedTypeReference<List<GameStats>>() {};
+		return 
+		webClient.get()
+		.uri("/api/ext/campaign/game/group/stats?campaignId="+initiativeId+"&groupId="+teamId+"&groupMode="+groupMode+"&dateFrom="+dateFrom+"&dateTo="+dateTo)
+		.attributes(clientRegistrationId("oauthprovider"))
+		.retrieve()
+		.bodyToMono(ref)
+		.block();	
+	}
 	public CampaignSubscription subscribe(String campaignId, String nickName, Map<String, Object> campaignData) {
 		return webClient.post()
 		.uri("/api/ext/campaign/subscribe/territory?campaignId="+campaignId+"&nickname="+nickName)
@@ -164,4 +185,5 @@ public class PlayGoEngineClientService {
 		}
 	    
 	}
+
 }
