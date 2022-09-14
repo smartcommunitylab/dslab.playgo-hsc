@@ -6,7 +6,8 @@ services:
 stages:
   - build
   - container-build
-  - deploy
+  - deploy-dev
+  - deploy-prod
   - test
   - container-scan
 
@@ -46,6 +47,7 @@ backend-container-build:
     - docker push $CONTAINER_IMAGE_LATEST
   only:
     - dev
+    - prod
 
 include:
   - template: Security/Container-Scanning.gitlab-ci.yml
@@ -71,9 +73,11 @@ container_scanning:
 #   rules:
 #     - if: '$CI_COMMIT_REF_NAME != "adc-aac-test"'
 
-deploy:
-  stage: deploy
-  image: smartcommunitylab/kubectl-alpine:latest
+deploy-dev:
+  stage: deploy-dev
+  image: 
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
   environment:
     name: platform-new
   script:
@@ -82,3 +86,17 @@ deploy:
     - kubectl -n playngo-dev rollout status deployment playngo-hsc
   only:
     - dev
+
+deploy-prod:
+  stage: deploy-prod
+  image: 
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
+  environment:
+    name: platform-new
+  script:
+    - echo "deploy backend"
+    - kubectl -n playngo-prod set image deployments/playngo-hsc playngo-hsc=$CONTAINER_IMAGE --record=true
+    - kubectl -n playngo-prod rollout status deployment playngo-hsc
+  only:
+    - prod
