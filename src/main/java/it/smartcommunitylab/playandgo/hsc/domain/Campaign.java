@@ -1,6 +1,5 @@
 package it.smartcommunitylab.playandgo.hsc.domain;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,19 +7,27 @@ import java.util.Map;
 public class Campaign {
 	private String campaignId;
 	private String territoryId;
-	private String name;
-	private String description;
+	private Map<String, String> name = new HashMap<>();
+	private Map<String, String> description = new HashMap<>();
 	private Long dateFrom;
 	private Long dateTo;
 	private Boolean active = Boolean.FALSE;
 	private Boolean communications = Boolean.FALSE;
+	private Boolean visible = Boolean.FALSE;
 	private int startDayOfWeek = 1; //Monday is 1 and Sunday is 7
 	private String gameId;
-	private List<CampaignDetail> details = new ArrayList<>(); 
+	private Map<String, List<CampaignDetail>> details = new HashMap<>(); 
 	private Image logo;
 	private Image banner;
 	
 	private Map<String, Object> validationData = new HashMap<>();
+	private Map<String, Object> specificData = new HashMap<>();
+
+	public boolean currentlyActive() {
+		return !Boolean.FALSE.equals(getActive()) && 
+				(getDateFrom() == null || getDateFrom() <= System.currentTimeMillis()) &&
+				(getDateTo() == null || getDateTo() >=  System.currentTimeMillis());
+	}
 
 	public String getCampaignId() {
 		return campaignId;
@@ -30,19 +37,27 @@ public class Campaign {
 		this.campaignId = campaignId;
 	}
 
-	public String getName() {
+	public String getTerritoryId() {
+		return territoryId;
+	}
+
+	public void setTerritoryId(String territoryId) {
+		this.territoryId = territoryId;
+	}
+
+	public Map<String, String> getName() {
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(Map<String, String> name) {
 		this.name = name;
 	}
 
-	public String getDescription() {
+	public Map<String, String> getDescription() {
 		return description;
 	}
 
-	public void setDescription(String description) {
+	public void setDescription(Map<String, String> description) {
 		this.description = description;
 	}
 
@@ -62,30 +77,6 @@ public class Campaign {
 		this.dateTo = dateTo;
 	}
 
-	public String getGameId() {
-		return gameId;
-	}
-
-	public void setGameId(String gameId) {
-		this.gameId = gameId;
-	}
-
-	public Map<String, Object> getValidationData() {
-		return validationData;
-	}
-
-	public void setValidationData(Map<String, Object> validationData) {
-		this.validationData = validationData;
-	}
-
-	public String getTerritoryId() {
-		return territoryId;
-	}
-
-	public void setTerritoryId(String territoryId) {
-		this.territoryId = territoryId;
-	}
-
 	public Boolean getActive() {
 		return active;
 	}
@@ -102,12 +93,36 @@ public class Campaign {
 		this.communications = communications;
 	}
 
+	public Boolean getVisible() {
+		return visible;
+	}
+
+	public void setVisible(Boolean visible) {
+		this.visible = visible;
+	}
+
 	public int getStartDayOfWeek() {
 		return startDayOfWeek;
 	}
 
 	public void setStartDayOfWeek(int startDayOfWeek) {
 		this.startDayOfWeek = startDayOfWeek;
+	}
+
+	public String getGameId() {
+		return gameId;
+	}
+
+	public void setGameId(String gameId) {
+		this.gameId = gameId;
+	}
+
+	public Map<String, List<CampaignDetail>> getDetails() {
+		return details;
+	}
+
+	public void setDetails(Map<String, List<CampaignDetail>> details) {
+		this.details = details;
 	}
 
 	public Image getLogo() {
@@ -118,12 +133,6 @@ public class Campaign {
 		this.logo = logo;
 	}
 
-	public boolean currentlyActive() {
-		return !Boolean.FALSE.equals(getActive()) && 
-				(getDateFrom() == null || getDateFrom() <= System.currentTimeMillis()) &&
-				(getDateTo() == null || getDateTo() >=  System.currentTimeMillis());
-	}
-
 	public Image getBanner() {
 		return banner;
 	}
@@ -132,11 +141,20 @@ public class Campaign {
 		this.banner = banner;
 	}
 
-	public List<CampaignDetail> getDetails() {
-		return details;
+	public Map<String, Object> getValidationData() {
+		return validationData;
 	}
 
-	public void setDetails(List<CampaignDetail> details) {
-		this.details = details;
+	public void setValidationData(Map<String, Object> validationData) {
+		this.validationData = validationData;
 	}
+
+	public Map<String, Object> getSpecificData() {
+		return specificData;
+	}
+
+	public void setSpecificData(Map<String, Object> specificData) {
+		this.specificData = specificData;
+	}
+
 }

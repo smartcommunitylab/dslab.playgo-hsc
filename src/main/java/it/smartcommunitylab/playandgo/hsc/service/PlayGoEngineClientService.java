@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -40,6 +42,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignSubscription;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
+import it.smartcommunitylab.playandgo.hsc.domain.TeamMember;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;
 import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
 
@@ -57,7 +60,8 @@ public class PlayGoEngineClientService {
 	private SecurityHelper securityHelper;
 	
 	@SuppressWarnings("unchecked")
-	public Map<String, Double> getPositions(String campaignId, Collection<String> nickNames) {
+	public Map<String, Double> getPositions(String campaignId, Collection<TeamMember> teamMembers) {
+		Set<String> nickNames = teamMembers.stream().map(tm -> tm.getNickname()).collect(Collectors.toSet());
 		return 
 		webClient.post()
 		.uri("/api/ext/campaign/game/placing?campaignId="+campaignId)

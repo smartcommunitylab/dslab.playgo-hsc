@@ -110,5 +110,16 @@ public class PlayerTeamController {
 	public ResponseEntity<Page<PlayerInfo>> candidates(@PathVariable String initiativeId, @RequestParam(required = false) String txt, Pageable pageRequest) {
 		return ResponseEntity.ok(teamService.searchPlayers(initiativeId, txt, pageRequest));
 	}
+	
+	@GetMapping("/api/initiatives/{initiativeId}/player/subscribe/check")
+	public ResponseEntity<Boolean> checkSubscribeTeamMember(@PathVariable String initiativeId, @RequestParam String nickname) throws HSCError {
+		return ResponseEntity.ok(teamService.checkSubscribeTeamMember(initiativeId, nickname));
+	}
+	
+	@PostMapping("/api/initiatives/{initiativeId}/player/subscribe")
+	public ResponseEntity<String> subscribeTeamMember(@PathVariable String initiativeId, @RequestParam String nickname) throws HSCError {
+		return ResponseEntity.ok(teamService.subscribeTeamMember(initiativeId, nickname));
+	}
+
 
 }

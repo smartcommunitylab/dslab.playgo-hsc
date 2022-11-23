@@ -50,6 +50,7 @@ import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignSubscription;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
+import it.smartcommunitylab.playandgo.hsc.domain.TeamMember;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole.Role;
 import it.smartcommunitylab.playandgo.hsc.repository.InitiativeRepository;
@@ -259,7 +260,7 @@ public class PlayerTeamControllerITests {
 		team.setInitiativeId(TEST_CAMPAIGN);
 		team.setExpected(20);
 		team.setOwner(TEST_OWNER);
-		team.setMembers(Collections.singleton(TEST_NICKNAME));
+		team.setMembers(Collections.singleton(new TeamMember(TEST_PLAYER_ID, TEST_NICKNAME)));
 		team.setCustomData(new HashMap<>());
 		return team;
 	}
