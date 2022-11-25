@@ -18,8 +18,6 @@ package it.smartcommunitylab.playandgo.hsc.rest;
 
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.annotations.ApiParam;
 import it.smartcommunitylab.playandgo.hsc.dto.CampaignPlacing;
 import it.smartcommunitylab.playandgo.hsc.dto.GameStats;
+import it.smartcommunitylab.playandgo.hsc.dto.PlacingComparison;
 import it.smartcommunitylab.playandgo.hsc.dto.TransportStat;
 import it.smartcommunitylab.playandgo.hsc.error.HSCError;
 import it.smartcommunitylab.playandgo.hsc.service.TeamStatsService;
@@ -62,8 +61,7 @@ public class TeamStatsController {
             @RequestParam String metric,
             @RequestParam(required = false) String mean,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateFrom,
-            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo,
-            HttpServletRequest request) throws HSCError {
+            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo) throws HSCError {
     	return teamStatsService.getCampaignPlacingByGroup(groupId, campaignId, metric, mean, dateFrom, dateTo);
     }
 
@@ -75,8 +73,7 @@ public class TeamStatsController {
             @RequestParam(required = false) String groupMode,
             @RequestParam(required = false) String mean,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateFrom,
-            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo,
-            HttpServletRequest request) throws HSCError {
+            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo) throws HSCError {
     	return teamStatsService.getGroupTransportStats(groupId, campaignId, groupMode, metric, mean, dateFrom, dateTo);
     }
     
@@ -86,8 +83,7 @@ public class TeamStatsController {
             @RequestParam String groupId,
             @RequestParam String metric,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateFrom,
-            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo,
-            HttpServletRequest request) throws Exception {
+            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo) throws Exception {
     	return teamStatsService.getGroupTransportStatsGroupByMean(groupId, campaignId, metric, dateFrom, dateTo);
     }
     
@@ -97,8 +93,7 @@ public class TeamStatsController {
 			@RequestParam String groupId,
 			@RequestParam String groupMode,
 			@RequestParam @ApiParam(value = "yyyy-MM-dd") String dateFrom,
-			@RequestParam @ApiParam(value = "yyyy-MM-dd") String dateTo,
-			HttpServletRequest request) throws Exception {
+			@RequestParam @ApiParam(value = "yyyy-MM-dd") String dateTo) throws Exception {
 		return teamStatsService.getGroupGameStats(groupId, campaignId, groupMode, dateFrom, dateTo);
 	}
 	
@@ -107,8 +102,7 @@ public class TeamStatsController {
             @RequestParam String campaignId,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateFrom,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo,
-            Pageable pageRequest,
-            HttpServletRequest request) throws Exception {
+            Pageable pageRequest) throws Exception {
     	return teamStatsService.getCampaignPlacingByGame(campaignId, dateFrom, dateTo, pageRequest);            
     }
     
@@ -117,9 +111,18 @@ public class TeamStatsController {
             @RequestParam String campaignId,
             @RequestParam String groupId,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateFrom,
-            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo,
-            HttpServletRequest request) throws Exception {
+            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo) throws Exception {
         return teamStatsService.getCampaignPlacingByGameAndGroup(groupId, campaignId, dateFrom, dateTo);
     }
+    
+    @GetMapping("/api/data/campaign/placing/group/game/comparison")
+    public PlacingComparison getCampaignPlacingByGameComparison(
+            @RequestParam String campaignId,
+            @RequestParam String groupId,
+            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateFrom,
+            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo) {
+    	return teamStatsService.getCampaignPlacingByGameComparison(groupId, campaignId, dateFrom, dateTo);
+    }
+
 
 }
