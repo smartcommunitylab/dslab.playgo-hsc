@@ -1,5 +1,7 @@
 package it.smartcommunitylab.playandgo.hsc.dto;
 
+import it.smartcommunitylab.playandgo.hsc.domain.Image;
+
 public class CampaignPlacing {
 	private String nickname;
 	private String playerId;

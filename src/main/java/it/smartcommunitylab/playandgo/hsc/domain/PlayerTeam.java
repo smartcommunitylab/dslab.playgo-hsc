@@ -31,6 +31,10 @@ public class PlayerTeam {
 	private String id;
 	private String initiativeId;
 	private String owner;
+	private String name;
+	private String institute;
+	private String school;
+	private String className;
 	private Set<TeamMember> members;
 	private Integer expected;
 	
@@ -71,5 +75,29 @@ public class PlayerTeam {
 	}
 	public void setInitiativeId(String initiativeId) {
 		this.initiativeId = initiativeId;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getInstitute() {
+		return institute;
+	}
+	public void setInstitute(String institute) {
+		this.institute = institute;
+	}
+	public String getSchool() {
+		return school;
+	}
+	public void setSchool(String school) {
+		this.school = school;
+	}
+	public String getClassName() {
+		return className;
+	}
+	public void setClassName(String className) {
+		this.className = className;
 	}
 }
