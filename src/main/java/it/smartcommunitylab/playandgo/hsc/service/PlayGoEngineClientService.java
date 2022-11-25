@@ -151,7 +151,7 @@ public class PlayGoEngineClientService {
     public CampaignPlacing getCampaignPlacingByGroup(String groupId, String campaignId, 
             String metric, String mean, String dateFrom, String dateTo) {
 		String uri = "/api/report/campaign/placing/group/transport?campaignId=" + campaignId 
-				+ "groupId=" + groupId + "&metric=" + metric;
+				+ "&groupId=" + groupId + "&metric=" + metric;
 		if(StringUtils.hasText(mean)) {
 			uri = uri + "&mean=" + mean;
 		}
@@ -169,7 +169,7 @@ public class PlayGoEngineClientService {
     public List<TransportStat> getGroupTransportStats(String groupId, String campaignId, String groupMode, String metric, 
             String mean, String dateFrom, String dateTo) {
 		String uri = "/api/report/group/transport/stats?campaignId=" + campaignId 
-				+ "groupId=" + groupId + "&metric=" + metric;
+				+ "&groupId=" + groupId + "&metric=" + metric;
 		if(StringUtils.hasText(groupMode)) {
 			uri = uri + "&groupMode=" + groupMode;
 		}
@@ -191,7 +191,7 @@ public class PlayGoEngineClientService {
     public List<TransportStat> getGroupTransportStatsGroupByMean(String groupId, String campaignId, String metric,
             String dateFrom, String dateTo) {
 		String uri = "/api/report/group/transport/stats/mean?campaignId=" + campaignId 
-				+ "groupId=" + groupId + "&metric=" + metric;
+				+ "&groupId=" + groupId + "&metric=" + metric;
 		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
 			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
 		}
@@ -207,7 +207,7 @@ public class PlayGoEngineClientService {
     public List<GameStats> getGroupGameStats(String groupId, String campaignId, String groupMode, 
             String dateFrom, String dateTo) {
 		String uri = "/api/report/group/game/stats?campaignId=" + campaignId 
-				+ "groupId=" + groupId + "&groupMode=" + groupMode;
+				+ "&groupId=" + groupId + "&groupMode=" + groupMode;
 		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
 			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
 		}
@@ -239,7 +239,7 @@ public class PlayGoEngineClientService {
     public CampaignPlacing getCampaignPlacingByGameAndGroup(String groupId, String campaignId,
             String dateFrom, String dateTo) {
 		String uri = "/api/report/campaign/placing/group/game?campaignId=" + campaignId 
-				+ "groupId=" + groupId;
+				+ "&groupId=" + groupId;
 		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
 			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
 		}
