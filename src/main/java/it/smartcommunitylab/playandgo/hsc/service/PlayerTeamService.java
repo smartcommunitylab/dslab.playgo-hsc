@@ -18,7 +18,6 @@ package it.smartcommunitylab.playandgo.hsc.service;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -285,8 +284,6 @@ public class PlayerTeamService {
 		});
 	}
 	
-
-
 	/**
 	 * @param initiativeId
 	 * @param initiative
@@ -435,6 +432,22 @@ public class PlayerTeamService {
 			}			
 		}
 		throw new NotFoundException("PLAYER_NOT_PRESENT");
+	}
+	
+	public List<PlayerInfo> getPlayerTeamInfo(String initiativeId, String teamId) throws HSCError {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}		
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if (team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		List<String> players = team.getMembers().stream()
+			.map(tm -> tm.getPlayerId())
+			.collect(Collectors.toList());
+		return engineService.getPlayersWithAvatars(initiative.getCampaign().getTerritoryId(), players);
+		
 	}
 
 

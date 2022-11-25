@@ -120,6 +120,13 @@ public class PlayerTeamController {
 	public ResponseEntity<String> subscribeTeamMember(@PathVariable String initiativeId, @RequestParam String nickname) throws HSCError {
 		return ResponseEntity.ok(teamService.subscribeTeamMember(initiativeId, nickname));
 	}
+	
+	@GetMapping("/api/initiatives/{initiativeId}/team/{teamId}/info")
+	public ResponseEntity<List<PlayerInfo>> getPlayerTeamInfo(
+			@PathVariable String initiativeId,
+			@PathVariable String teamId) throws HSCError {
+		return ResponseEntity.ok(teamService.getPlayerTeamInfo(initiativeId, teamId));
+	}
 
 
 }

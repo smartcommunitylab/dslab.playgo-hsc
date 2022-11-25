@@ -88,6 +88,21 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 
+	public List<PlayerInfo> getPlayersWithAvatars(String territory, List<String> players) {
+		ParameterizedTypeReference<List<PlayerInfo>> ref = new ParameterizedTypeReference<List<PlayerInfo>>() {};
+		String uri = "/api/ext/territory/players/avatar?territory="+territory;
+		for(String playerId : players) {
+			uri = uri + "&players=" + playerId;
+		}
+		return 
+		webClient.get()
+		.uri(uri)
+		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
+		.retrieve()
+		.bodyToMono(ref)
+		.block();
+	}
+	
 	public RestPage<PlayerInfo> getPlayers(String txt, String territory, Pageable pageRequest) {
 		ParameterizedTypeReference<RestPage<PlayerInfo>> ref = new ParameterizedTypeReference<RestPage<PlayerInfo>>() {};
 		return 
