@@ -24,18 +24,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
 import it.smartcommunitylab.playandgo.hsc.dto.CampaignPlacing;
 import it.smartcommunitylab.playandgo.hsc.dto.GameStats;
 import it.smartcommunitylab.playandgo.hsc.dto.PlacingComparison;
 import it.smartcommunitylab.playandgo.hsc.dto.TransportStat;
-import it.smartcommunitylab.playandgo.hsc.repository.InitiativeRepository;
 import it.smartcommunitylab.playandgo.hsc.repository.PlayerTeamRepository;
-import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
 
 /**
  * @author nori
@@ -49,11 +47,7 @@ public class TeamStatsService {
 	@Autowired
 	private PlayGoEngineClientService engineService;
 	@Autowired
-	private InitiativeRepository initiativeRepo;
-	@Autowired
 	private PlayerTeamRepository teamRepo;
-	@Autowired
-	private SecurityHelper securityHelper;
 
 	@PostConstruct
 	private void init() {			
@@ -75,8 +69,18 @@ public class TeamStatsService {
     }
     
     public List<TransportStat> getGroupTransportStatsGroupByMean(String groupId, String campaignId, String metric,
-            String dateFrom, String dateTo) {
-    	return engineService.getGroupTransportStatsGroupByMean(groupId, campaignId, metric, dateFrom, dateTo);
+            String dateFrom, String dateTo, boolean avg) {
+    	List<TransportStat> list = engineService.getGroupTransportStatsGroupByMean(groupId, campaignId, metric, dateFrom, dateTo);
+    	if(avg) {
+    		PlayerTeam team = teamRepo.findById(groupId).orElse(null);
+    		if(team != null) {
+    			int size = team.getMembers().size();
+    			for(TransportStat ts : list) {
+    				ts.setValue(ts.getValue() / size);
+    			}
+    		}
+    	}
+    	return list;
     }
     
     public List<GameStats> getGroupGameStats(String groupId, String campaignId, String groupMode, 

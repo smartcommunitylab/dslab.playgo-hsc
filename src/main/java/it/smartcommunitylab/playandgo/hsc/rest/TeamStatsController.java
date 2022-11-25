@@ -82,9 +82,10 @@ public class TeamStatsController {
             @RequestParam String campaignId,
             @RequestParam String groupId,
             @RequestParam String metric,
+            @RequestParam(required = false) boolean avg,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateFrom,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo) throws Exception {
-    	return teamStatsService.getGroupTransportStatsGroupByMean(groupId, campaignId, metric, dateFrom, dateTo);
+    	return teamStatsService.getGroupTransportStatsGroupByMean(groupId, campaignId, metric, dateFrom, dateTo, avg);
     }
     
 	@GetMapping("/api/data/campaign/group/game/stats")
