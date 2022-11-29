@@ -18,7 +18,6 @@ package it.smartcommunitylab.playandgo.hsc.service;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,14 +41,11 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
-import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
-import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeamStats;
 import it.smartcommunitylab.playandgo.hsc.domain.TeamMember;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;
-import it.smartcommunitylab.playandgo.hsc.dto.GameStats;
 import it.smartcommunitylab.playandgo.hsc.error.DataException;
 import it.smartcommunitylab.playandgo.hsc.error.HSCError;
 import it.smartcommunitylab.playandgo.hsc.error.NotFoundException;
@@ -180,6 +176,26 @@ public class PlayerTeamService {
 			tm.setSubscribed(false);
 		}
 		team = teamRepo.save(team);
+//		try {
+//			// try to subscribe
+//			for (String nickName: toAdd) {
+//				Map<String, Object> data = new HashMap<>(team.getCustomData());
+//				data.put("teamId", team.getId());
+//				engineService.subscribe(initiative.getInitiativeId(), nickName, team.getCustomData());
+//			}
+//			team = teamRepo.save(team);
+//		} catch (Exception e) {
+//			logger.error("Failed to subscribe: " + e.getMessage(), e);
+//			// subscription / save failed: undo subscribe
+//			for (String nickName: toAdd) {
+//				try {
+//					engineService.unsubscribe(initiative.getInitiativeId(), nickName);
+//				} catch (Exception e1) {
+//					logger.error("Failed to clean subscription "+ e1.getMessage());
+//				}
+//			}
+//			throw e;
+//		}
 		// remove not used
 		for (TeamMember tm : toRemove) {
 			if(tm.isSubscribed()) {
@@ -297,16 +313,6 @@ public class PlayerTeamService {
 			syncExternalCampaigns();
 		}
 	}
-
-	public  List<PlayerTeam> getPublicTeams(String initiative) {
-		List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiative);
-		teams.forEach(t -> {
-			t.setOwner(null);
-			t.setExpected(0);
-			t.setMembers(null);
-		});
-		return teams;
-	}
 	
 	public  List<TeamClassification> getLeaderboard(String initiative) {
 		List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiative);
@@ -335,136 +341,6 @@ public class PlayerTeamService {
 		return list;
 	}
 	
-
-	/**
-	 * @param initiativeId
-	 * @param dateFrom
-	 * @param dateTo
-	 * @return
-	 */
-	public List<TeamClassification> getLeaderboard(String initiativeId, String dateFrom, String dateTo) {
-		List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiativeId);
-		Map<String, CampaignGroupPlacing> map = engineService.getPositions(initiativeId, dateFrom, dateTo)
-				.stream().collect(Collectors.toMap(p -> p.getGroupId(), p -> p));
-
-		List<TeamClassification>  res = teams.stream().map(t -> {
-			TeamClassification tc = new TeamClassification();
-			tc.setId(t.getId());
-			tc.setCustomData(t.getCustomData());
-			CampaignGroupPlacing p = map.get(tc.getId());
-			if (p != null) {
-				tc.setPosition(p.getPosition());
-				tc.setScore(p.getValue());
-			} else {
-				tc.setPosition(0);
-				tc.setScore(0d);
-			}
-			return tc;
-		}).collect(Collectors.toList());
-		res.sort((a,b) -> a.getPosition() - b.getPosition());
-		return res;
-	}
-	
-
-	/**
-	 * @param initiativeId
-	 * @param teamId
-	 * @param groupMode
-	 * @param dateFrom
-	 * @param dateTo
-	 * @return
-	 */
-	public List<GameStats> getTeamStats(String initiativeId, String teamId, String groupMode, String dateFrom, String dateTo) {
-		return engineService.getTeamStats(initiativeId, teamId, groupMode, dateFrom, dateTo);
-	}
-
-	
-	/**
-	 * Subscribe to the team: check nickname in the list of the members and then subscribe to engine
-	 * @param initiativeId
-	 * @param teamId
-	 * @param player
-	 * @return
-	 * @throws OperationNotPermittedException 
-	 * @throws NotFoundException 
-	 */
-	public PlayerInfo subscribeCampaign(String initiativeId, String teamId) throws OperationNotPermittedException, NotFoundException {
-		Initiative initiative = getInitiative(initiativeId);
-		if (initiative == null) {
-			throw new NotFoundException("NO_INITIATIVE");
-		}
-		String subj = securityHelper.getCurrentSubject();
-		PlayerInfo ext = engineService.getPlayer(subj, initiative.getCampaign().getTerritoryId());
-		if (ext == null) {
-			throw new OperationNotPermittedException("PLAYER");
-		}
-		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
-		if (team == null) {
-			throw new NotFoundException("NO_TEAM");
-		}
-		if (!team.getMembers().contains(ext.getNickname())) {
-			throw new OperationNotPermittedException("MEMBER");
-		}
-		Map<String, Object> data = new HashMap<>(team.getCustomData());
-		data.put("teamId", team.getId());
-		engineService.subscribe(initiativeId, ext.getNickname(), team.getCustomData());
-		return ext;
-	}
-	
-	/**
-	 * Subscribe to the team: check nickname in the list of the members and then subscribe to engine
-	 * @param initiativeId
-	 * @param teamId
-	 * @param player
-	 * @return
-	 * @throws OperationNotPermittedException 
-	 * @throws NotFoundException 
-	 */
-	public void unsubscribeCampaign(String initiativeId, String teamId) throws OperationNotPermittedException, NotFoundException {
-		Initiative initiative = getInitiative(initiativeId);
-		if (initiative == null) {
-			throw new NotFoundException("NO_INITIATIVE");
-		}
-		String subj = securityHelper.getCurrentSubject();
-		PlayerInfo ext = engineService.getPlayer(subj, initiative.getCampaign().getTerritoryId());
-		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
-		if (team == null) {
-			throw new NotFoundException("NO_TEAM");
-		}
-		if (!team.getMembers().contains(ext.getNickname())) {
-			throw new OperationNotPermittedException("MEMBER");
-		}
-		Map<String, Object> data = new HashMap<>(team.getCustomData());
-		data.put("teamId", team.getId());
-		engineService.unsubscribe(initiativeId, ext.getNickname());
-		team.getMembers().remove(ext.getNickname());
-		teamRepo.save(team);
-	}
-	
-
-
-	/**
-	 * @param initiativeId
-	 * @param teamId
-	 * @param dateTo 
-	 * @param dateFrom 
-	 * @param groupMode 
-	 * @return
-	 * @throws NotFoundException 
-	 */
-	public PlayerTeamStats getPlayerTeamStats(String initiativeId, String teamId, String groupMode, String dateFrom, String dateTo) throws NotFoundException {
-		PlayerTeamStats stats = new PlayerTeamStats();
-		Initiative initiative = getInitiative(initiativeId);
-		if (initiative == null) {
-			throw new NotFoundException("NO_INITIATIVE");
-		}
-		String subj = securityHelper.getCurrentSubject();
-		PlayerInfo ext = engineService.getPlayer(subj, initiative.getCampaign().getTerritoryId());
-		
-		return stats;
-	}
-
-	
 	@Scheduled(fixedDelay=1000*60*60*24, initialDelay = 1000*60*60) 
 	public void syncExternalCampaigns() {
 		List<Campaign> campaigns = engineService.getCampaigns();
@@ -486,14 +362,14 @@ public class PlayerTeamService {
 	}
 	
 	private boolean isAdmin(List<UserRole> roles) {
-		return roles != null && roles.stream().anyMatch(r -> UserRole.Role.admin.equals(r.getRole()));
+		return roles != null && roles.stream().anyMatch(r -> r.getRole().equals(UserRole.Role.admin));
 	}
 	
 	private List<String> getTerritories(List<UserRole> roles) {
-		return roles.stream().filter(r -> UserRole.Role.territory.equals(r.getRole())).map(r -> r.getEntityId()).collect(Collectors.toList());
+		return roles.stream().filter(r -> r.getRole().equals(UserRole.Role.territory)).map(r -> r.getEntityId()).collect(Collectors.toList());
 	}
 	private List<String> getCampaigns(List<UserRole> roles) {
-		return roles.stream().filter(r -> UserRole.Role.campaign.equals(r.getRole())).map(r -> r.getEntityId()).collect(Collectors.toList());
+		return roles.stream().filter(r -> r.getRole().equals(UserRole.Role.campaign)).map(r -> r.getEntityId()).collect(Collectors.toList());
 	}
 	
 	private Double computeTeamScore(String initiativeId, String teamId) {

@@ -41,7 +41,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
-import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignSubscription;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.TeamMember;
@@ -78,18 +77,6 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 
-	@SuppressWarnings("unchecked")
-	public List<CampaignGroupPlacing> getPositions(String campaignId, String dateFrom, String dateTo) {
-		ParameterizedTypeReference<List<CampaignGroupPlacing>> ref = new ParameterizedTypeReference<List<CampaignGroupPlacing>>() {};
-		return 
-		webClient.get()
-		.uri("/api/ext/campaign/game/group/placing?campaignId="+campaignId+"&dateFrom="+dateFrom+"&dateTo="+dateTo)
-		.attributes(clientRegistrationId("oauthprovider"))
-		.retrieve()
-		.bodyToMono(ref)
-		.block();
-	}
-	
 	public List<UserRole> getUserRoles() {
 		ParameterizedTypeReference<List<UserRole>> ref = new ParameterizedTypeReference<List<UserRole>>() {};
 		return 
@@ -126,15 +113,6 @@ public class PlayGoEngineClientService {
 		.bodyToMono(ref)
 		.block();
 	}
-	public PlayerInfo getPlayer(String playerId, String territory) {
-		return 
-		webClient.get()
-		.uri("/api/ext/territory/players/"+playerId+"?territory="+territory)
-		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
-		.retrieve()
-		.bodyToMono(PlayerInfo.class)
-		.block();
-	}
 	
 	public List<Campaign> getCampaigns() {
 		ParameterizedTypeReference<List<Campaign>> ref = new ParameterizedTypeReference<List<Campaign>>() {};
@@ -147,26 +125,6 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 
-
-	/**
-	 * @param initiativeId
-	 * @param teamId
-	 * @param groupMode
-	 * @param dateFrom
-	 * @param dateTo
-	 * @return
-	 */
-	public List<GameStats> getTeamStats(String initiativeId, String teamId, String groupMode, String dateFrom,
-			String dateTo) {
-		ParameterizedTypeReference<List<GameStats>> ref = new ParameterizedTypeReference<List<GameStats>>() {};
-		return 
-		webClient.get()
-		.uri("/api/ext/campaign/game/group/stats?campaignId="+initiativeId+"&groupId="+teamId+"&groupMode="+groupMode+"&dateFrom="+dateFrom+"&dateTo="+dateTo)
-		.attributes(clientRegistrationId("oauthprovider"))
-		.retrieve()
-		.bodyToMono(ref)
-		.block();	
-	}
 	public CampaignSubscription subscribe(String campaignId, String nickName, Map<String, Object> campaignData) {
 		return webClient.post()
 		.uri("/api/ext/campaign/subscribe/territory?campaignId="+campaignId+"&nickname="+nickName)
@@ -329,5 +287,4 @@ public class PlayGoEngineClientService {
 		}
 	    
 	}
-
 }

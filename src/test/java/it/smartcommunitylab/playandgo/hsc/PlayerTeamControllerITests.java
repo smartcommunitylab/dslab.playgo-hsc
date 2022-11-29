@@ -142,6 +142,7 @@ public class PlayerTeamControllerITests {
                 .andExpect(status().isOk());
 		
 		prepareAdminRoles();
+		prepareSubscription();
 		PlayerTeam team = defaultTeam();
 		restMockMvc.perform(
                 post("/api/initiatives/" + TEST_CAMPAIGN+ "/team")
@@ -211,7 +212,7 @@ public class PlayerTeamControllerITests {
                 .andExpect(status().isOk());
 		
 		prepareAdminRoles();
-//		prepareSubscription();
+		prepareSubscription();
 		PlayerTeam team = defaultTeam();
 		restMockMvc.perform(
                 post("/api/initiatives/" + TEST_CAMPAIGN+ "/team")
