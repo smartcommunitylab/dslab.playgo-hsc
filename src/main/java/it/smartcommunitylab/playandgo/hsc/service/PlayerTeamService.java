@@ -18,7 +18,6 @@ package it.smartcommunitylab.playandgo.hsc.service;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -48,7 +46,7 @@ import it.smartcommunitylab.playandgo.hsc.domain.GameStats;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
-import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeamStats;
+import it.smartcommunitylab.playandgo.hsc.domain.TeamMember;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;
 import it.smartcommunitylab.playandgo.hsc.error.DataException;
 import it.smartcommunitylab.playandgo.hsc.error.HSCError;
@@ -104,6 +102,7 @@ public class PlayerTeamService {
 		});
 			
 	}
+	
 	public List<Initiative> getInitativesForManager() {
 		List<UserRole> roles = engineService.getUserRoles();
 		if (isAdmin(roles)) return initiativeRepo.findAll();
@@ -120,11 +119,16 @@ public class PlayerTeamService {
 		if (initiative != null) {
 			Page<PlayerInfo> page = engineService.getPlayers(txt, initiative.getCampaign().getTerritoryId(), pageRequest);
 			if (page.hasContent()) {
-				final Set<String> registered = teamRepo.findByInitiativeId(initiativeId)
-				.stream()
-				.map(t -> t.getMembers())
-				.flatMap(Collection::stream)
-				.collect(Collectors.toSet());
+				final Set<TeamMember> members = teamRepo.findByInitiativeId(initiativeId)
+						.stream()
+						.map(t -> t.getMembers())
+						.flatMap(Collection::stream)
+						.collect(Collectors.toSet());
+				final Set<String> registered = members
+						.stream()
+						.filter(t -> t.isSubscribed())
+						.map(t -> t.getNickname())
+						.collect(Collectors.toSet());
 				page.getContent().forEach(p -> p.setSubscribed(registered.contains(p.getNickname())));
 			}
 			return page;
@@ -132,7 +136,7 @@ public class PlayerTeamService {
 		return Page.empty();
 	}
 	
-	public PlayerTeam saveTeam(@PathVariable String initiativeId, PlayerTeam team) throws HSCError {
+	public PlayerTeam saveTeam(String initiativeId, PlayerTeam team) throws HSCError {
 		String currentUser = securityHelper.getCurrentPreferredUsername();
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
@@ -143,8 +147,8 @@ public class PlayerTeamService {
 		boolean isManager = userInitiatives.stream().anyMatch(i -> i.getInitiativeId().equals(initiativeId));
 		team.setInitiativeId(initiativeId);
 		
-		Set<String> toRemove = new HashSet<>();
-		Set<String> toAdd = new HashSet<>(team.getMembers());
+		Set<TeamMember> toRemove = new HashSet<>();
+		Set<TeamMember> toAdd = new HashSet<>(team.getMembers());
 		
 		if (team.getId() != null) {
 			PlayerTeam existing = teamRepo.findById(team.getId()).orElse(null);
@@ -170,37 +174,18 @@ public class PlayerTeamService {
 			team.setOwner(currentUser);
 		}
 		validate(team, initiative);
-		
-		/* DISABLED: NO SUBSCRIPTION BY MANAGER, JUST CONFIGURATION SAVE
-		try {
-			// try to subscribe
-			for (String nickName: toAdd) {
-				Map<String, Object> data = new HashMap<>(team.getCustomData());
-				data.put("teamId", team.getId());
-				engineService.subscribe(initiative.getInitiativeId(), nickName, team.getCustomData());
-			}
-			team = teamRepo.save(team);
-		} catch (Exception e) {
-			logger.error("Failed to subscribe: " + e.getMessage(), e);
-			// subscription / save failed: undo subscribe
-			for (String nickName: toAdd) {
-				try {
-					engineService.unsubscribe(initiative.getInitiativeId(), nickName);
-				} catch (Exception e1) {
-					logger.error("Failed to clean subscription "+ e1.getMessage());
-				}
-			}
-			throw e;
+		for(TeamMember tm : toAdd) {
+			tm.setSubscribed(false);
 		}
-		*/
 		team = teamRepo.save(team);
-
 		// remove not used
-		for (String nickName: toRemove) {
-			try {
-				engineService.unsubscribe(initiative.getInitiativeId(), nickName);
-			} catch (Exception e1) {
-				logger.error("Failed to remove subscription", e1);
+		for (TeamMember tm : toRemove) {
+			if(tm.isSubscribed()) {
+				try {
+					engineService.unsubscribe(initiative.getInitiativeId(), tm.getNickname());
+				} catch (Exception e1) {
+					logger.error("Failed to remove subscription", e1);
+				}				
 			}
 		}
 		return team;
@@ -216,7 +201,7 @@ public class PlayerTeamService {
 		List<Initiative> userInitiatives = getInitativesForManager();
 		boolean isManager = userInitiatives.stream().anyMatch(i -> i.getInitiativeId().equals(initiativeId));
 		
-		Set<String> toRemove = new HashSet<>();
+		Set<TeamMember> toRemove = new HashSet<>();
 		
 		PlayerTeam existing = teamRepo.findById(teamId).orElse(null);
 		if (existing == null) {
@@ -233,11 +218,13 @@ public class PlayerTeamService {
 		}
 		toRemove = new HashSet<>(existing.getMembers());
 		// remove not used
-		for (String nickName: toRemove) {
-			try {
-				engineService.unsubscribe(initiative.getInitiativeId(), nickName);
-			} catch (Exception e1) {
-				logger.error("Failed to remove subscription", e1);
+		for (TeamMember tm: toRemove) {
+			if(tm.isSubscribed()) {
+				try {
+					engineService.unsubscribe(initiative.getInitiativeId(), tm.getNickname());
+				} catch (Exception e1) {
+					logger.error("Failed to remove subscription", e1);
+				}				
 			}
 		}
 		teamRepo.delete(existing);
@@ -249,7 +236,7 @@ public class PlayerTeamService {
 	 * @throws DataException 
 	 */
 	private void validate(PlayerTeam team, Initiative initiative) throws DataException {
-		Set<String> registered = teamRepo.findByInitiativeId(initiative.getInitiativeId())
+		Set<TeamMember> registered = teamRepo.findByInitiativeId(initiative.getInitiativeId())
 				.stream()
 				.filter(t -> !t.getId().equals(team.getId()))
 				.map(t -> t.getMembers())
@@ -279,8 +266,6 @@ public class PlayerTeamService {
 		});
 	}
 	
-
-
 	/**
 	 * @param initiativeId
 	 * @param initiative
@@ -530,6 +515,61 @@ public class PlayerTeamService {
 				return score;
 			} 
 			return 0d;
+	}
+	
+	public boolean checkSubscribeTeamMember(String initiativeId, String nickname) throws HSCError {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}
+		final Set<TeamMember> members = teamRepo.findByInitiativeId(initiativeId)
+				.stream()
+				.map(t -> t.getMembers())
+				.flatMap(Collection::stream)
+				.collect(Collectors.toSet());
+		final Set<String> registered = members
+				.stream()
+				.map(t -> t.getNickname())
+				.collect(Collectors.toSet());
+		return registered.contains(nickname);
+		
+	}
+	
+	public String subscribeTeamMember(String initiativeId, String nickname) throws HSCError {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}
+		List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiativeId);
+		for(PlayerTeam team : teams) {
+			for(TeamMember tm : team.getMembers()) {
+				if(tm.getNickname().equals(nickname)) {
+					if(tm.isSubscribed()) {
+						throw new NotFoundException("PLAYER_ALREADY_SUBSCRIBED");
+					}
+					tm.setSubscribed(true);
+					teamRepo.save(team);
+					return team.getId(); 
+				}
+			}			
+		}
+		throw new NotFoundException("PLAYER_NOT_PRESENT");
+	}
+	
+	public List<PlayerInfo> getPlayerTeamInfo(String initiativeId, String teamId) throws HSCError {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}		
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if (team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		List<String> players = team.getMembers().stream()
+			.map(tm -> tm.getPlayerId())
+			.collect(Collectors.toList());
+		return engineService.getPlayersWithAvatars(initiative.getCampaign().getTerritoryId(), players);
+		
 	}
 
 

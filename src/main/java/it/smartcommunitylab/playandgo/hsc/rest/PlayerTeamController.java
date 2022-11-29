@@ -18,6 +18,8 @@ package it.smartcommunitylab.playandgo.hsc.rest;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,13 +32,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.multipart.MultipartFile;
 import io.swagger.annotations.ApiParam;
 import it.smartcommunitylab.playandgo.hsc.domain.GameStats;
+import it.smartcommunitylab.playandgo.hsc.domain.Avatar;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
 import it.smartcommunitylab.playandgo.hsc.error.HSCError;
+import it.smartcommunitylab.playandgo.hsc.service.AvatarService;
 import it.smartcommunitylab.playandgo.hsc.service.PlayerTeamService;
 import it.smartcommunitylab.playandgo.hsc.service.PlayerTeamService.TeamClassification;
 
@@ -50,6 +54,8 @@ public class PlayerTeamController {
 	@Autowired
 	private PlayerTeamService teamService;
 	
+	@Autowired
+	private AvatarService avatarService;
 
 	@GetMapping("/publicapi/{initiativeId}/board")
 	public 
@@ -141,5 +147,38 @@ public class PlayerTeamController {
 	public ResponseEntity<Page<PlayerInfo>> candidates(@PathVariable String initiativeId, @RequestParam(required = false) String txt, Pageable pageRequest) {
 		return ResponseEntity.ok(teamService.searchPlayers(initiativeId, txt, pageRequest));
 	}
+	
+	@GetMapping("/api/initiatives/{initiativeId}/player/subscribe/check")
+	public ResponseEntity<Boolean> checkSubscribeTeamMember(@PathVariable String initiativeId, @RequestParam String nickname) throws HSCError {
+		return ResponseEntity.ok(teamService.checkSubscribeTeamMember(initiativeId, nickname));
+	}
+	
+	@PostMapping("/api/initiatives/{initiativeId}/player/subscribe")
+	public ResponseEntity<String> subscribeTeamMember(@PathVariable String initiativeId, @RequestParam String nickname) throws HSCError {
+		return ResponseEntity.ok(teamService.subscribeTeamMember(initiativeId, nickname));
+	}
+	
+	@GetMapping("/api/initiatives/{initiativeId}/team/{teamId}/info")
+	public ResponseEntity<List<PlayerInfo>> getPlayerTeamInfo(
+			@PathVariable String initiativeId,
+			@PathVariable String teamId) throws HSCError {
+		return ResponseEntity.ok(teamService.getPlayerTeamInfo(initiativeId, teamId));
+	}
+
+	@PostMapping("/api/team/{teamId}/avatar")
+	public Avatar uploadTeamAvatar(
+			@PathVariable String teamId,
+			@RequestParam("data") MultipartFile data,
+			HttpServletRequest request) throws HSCError {
+		return avatarService.uploadTeamAvatar(teamId, data);
+	}
+	
+	@GetMapping("/api/team/{teamId}/avatar")
+	public Avatar getTeamAvatar(
+			@PathVariable String teamId,
+			HttpServletRequest request) throws HSCError {
+		return avatarService.getTeamAvatar(teamId);
+	}
+
 
 }

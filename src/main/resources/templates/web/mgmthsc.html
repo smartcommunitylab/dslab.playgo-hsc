@@ -19,6 +19,7 @@
       FIELD_REQUIRED = [[#{teammgmt.error_required}]];
       TEAM_SIZE_LABEL = [[#{teammgmt.hsc.team_size_label}]];
       TEAM_SIZE_ERROR = [[#{teammgmt.hsc.team_size_error}]];
+      F_NAME_LABEL = [[#{teamboard.hsc.name}]];
       F_INSTITUTE_LABEL = [[#{teamboard.hsc.institute}]];
       F_SCHOOL_LABEL = [[#{teamboard.hsc.school}]];
       F_CLASS_LABEL = [[#{teamboard.hsc.cls}]];
@@ -54,7 +55,7 @@
       <v-btn icon>
         <v-icon @click="back()">mdi-chevron-left</v-icon>
       </v-btn>
-      <v-toolbar-title><span  th:text="#{teammgmt.title}">Team Management</span> - {{initiative.campaign.name}}</v-toolbar-title>
+      <v-toolbar-title><span  th:text="#{teammgmt.title}">Team Management</span> - {{initiative.campaign.name.it}}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn icon>
         <v-icon @click="logout()">mdi-logout</v-icon>
@@ -79,7 +80,7 @@
 					        </v-list-item-title>
                   <v-list-item-subtitle v-if="isAdmin"><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-subtitle>
                   <v-list-item-subtitle><span  th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
-					        <v-list-item-subtitle>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{team.members.join(', ')}})</span></v-list-item-subtitle>
+					        <v-list-item-subtitle>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
 					      </v-list-item-content>					
 					    </v-list-item>
 					
@@ -105,6 +106,9 @@
           <v-container>
             <v-row>
               <v-col cols="12">
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" required></v-text-field>
+              </v-col>
+              <v-col cols="12">
                 <v-text-field :rules="fieldRules" v-model="currTeam.customData['institute']" :label="F_INSTITUTE_LABEL+'*'" required></v-text-field>
               </v-col>
               <v-col cols="12">
@@ -118,7 +122,9 @@
                 <v-text-field :rules="fieldRules" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" required></v-text-field>
               </v-col>
               <v-col cols="12">
-              <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :error-messages="!teamValid ? teamSizeError : null" :items="teamCandidates" chips deletable-chips label="Team Members" th:attr="label=#{teammgmt.lbl_members}" multiple>
+              <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :error-messages="!teamValid ? teamSizeError : null" 
+              	:items="teamCandidates" item-text="nickname" item-disabled="disabled"
+              	chips deletable-chips label="Team Members" th:attr="label=#{teammgmt.lbl_members}" return-object multiple>
               </v-autocomplete>
               </v-col>
             </v-row>
@@ -190,6 +196,7 @@
     		  loading: false,
     		  unauthorized: false,
     		  TEAM_SIZE_LABEL: TEAM_SIZE_LABEL,
+    		  F_NAME_LABEL: F_NAME_LABEL,
           F_INSTITUTE_LABEL: F_INSTITUTE_LABEL,
           F_SCHOOL_LABEL: F_SCHOOL_LABEL,
           F_CLASS_LABEL: F_CLASS_LABEL,
@@ -228,12 +235,15 @@
     	  getCandidates: function(val) {
            axios.get(`../../../api/initiatives/${INITIATIVE.initiativeId}/team/candidates?txt=${!!val ? val :''}`, conf).then((data) => {
         	   // disabled if subscribed by another team
-             var remote = data.data.content.map(c => ({text: c.nickname, value: c.nickname, disabled: c.subscribed && (!this.currTeam || this.currTeam.members.indexOf(c.nickname) < 0)}));
+             var remote = data.data.content.map(c => {
+							c.disabled = c.subscribed && (!this.currTeam || this.currTeam.members.some(m => m.nickname == c.nickname));
+							return c;
+						 });
              if (this.currTeam && this.currTeam.members) {
             	 // append also current members to appear as chips
             	 this.currTeam.members.forEach(m => {
-            		  if (!remote.some(c => c.value == m)) {
-            			  remote.push({text: m, value: m});
+            		  if (!remote.some(c => c.nickname == m.nickname)) {
+            			  remote.push(m);
             		  }
            	   });            	 
              }
@@ -260,6 +270,13 @@
                   this.loading = false;                                   
             });    		  
     	  },
+    	  getTeamMemberList(team) {
+					var list = '';
+					team.members.forEach(tm => {
+						list = list + tm.nickname + ', ';
+					});
+					return list;
+				},
     	  createNew() {
     		  this.currTeam = {members: [], customData: {}};
     		  this.dialog = true;

@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -31,6 +33,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -42,7 +45,11 @@ import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignSubscription;
 import it.smartcommunitylab.playandgo.hsc.domain.GameStats;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
+import it.smartcommunitylab.playandgo.hsc.domain.TeamMember;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;
+import it.smartcommunitylab.playandgo.hsc.dto.CampaignPlacing;
+import it.smartcommunitylab.playandgo.hsc.dto.GameStats;
+import it.smartcommunitylab.playandgo.hsc.dto.TransportStat;
 import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
 
 /**
@@ -59,7 +66,8 @@ public class PlayGoEngineClientService {
 	private SecurityHelper securityHelper;
 	
 	@SuppressWarnings("unchecked")
-	public Map<String, Double> getPositions(String campaignId, Collection<String> nickNames) {
+	public Map<String, Double> getPositions(String campaignId, Collection<TeamMember> teamMembers) {
+		Set<String> nickNames = teamMembers.stream().map(tm -> tm.getNickname()).collect(Collectors.toSet());
 		return 
 		webClient.post()
 		.uri("/api/ext/campaign/game/placing?campaignId="+campaignId)
@@ -94,6 +102,21 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 
+	public List<PlayerInfo> getPlayersWithAvatars(String territory, List<String> players) {
+		ParameterizedTypeReference<List<PlayerInfo>> ref = new ParameterizedTypeReference<List<PlayerInfo>>() {};
+		String uri = "/api/ext/territory/players/avatar?territory="+territory;
+		for(String playerId : players) {
+			uri = uri + "&players=" + playerId;
+		}
+		return 
+		webClient.get()
+		.uri(uri)
+		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
+		.retrieve()
+		.bodyToMono(ref)
+		.block();
+	}
+	
 	public RestPage<PlayerInfo> getPlayers(String txt, String territory, Pageable pageRequest) {
 		ParameterizedTypeReference<RestPage<PlayerInfo>> ref = new ParameterizedTypeReference<RestPage<PlayerInfo>>() {};
 		return 
@@ -164,6 +187,128 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 	
+	public RestPage<CampaignPlacing> getCampaignPlacing(String campaignId, String metric, String mean,  
+			String dateFrom, String dateTo, Pageable pageRequest) {
+		String uri = "/api/report/campaign/placing/transport?campaignId=" + campaignId + "&metric=" + metric + "&groupByGroupId=true";
+		if(StringUtils.hasText(mean)) {
+			uri = uri + "&mean=" + mean;
+		}
+		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
+			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
+		}
+		uri = uri + "&size=" + pageRequest.getPageSize() + "&page=" + pageRequest.getPageNumber();
+		ParameterizedTypeReference<RestPage<CampaignPlacing>> ref = new ParameterizedTypeReference<RestPage<CampaignPlacing>>() {};
+		return webClient.get()
+				.uri(uri)
+				.attributes(clientRegistrationId("oauthprovider"))
+				.retrieve()
+				.bodyToMono(ref)
+				.block();
+	}
+	
+    public CampaignPlacing getCampaignPlacingByGroup(String groupId, String campaignId, 
+            String metric, String mean, String dateFrom, String dateTo) {
+		String uri = "/api/report/campaign/placing/group/transport?campaignId=" + campaignId 
+				+ "&groupId=" + groupId + "&metric=" + metric;
+		if(StringUtils.hasText(mean)) {
+			uri = uri + "&mean=" + mean;
+		}
+		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
+			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
+		}
+		return webClient.get()
+				.uri(uri)
+				.attributes(clientRegistrationId("oauthprovider"))
+				.retrieve()
+				.bodyToMono(CampaignPlacing.class)
+				.block();    	
+    }
+    
+    public List<TransportStat> getGroupTransportStats(String groupId, String campaignId, String groupMode, String metric, 
+            String mean, String dateFrom, String dateTo) {
+		String uri = "/api/report/group/transport/stats?campaignId=" + campaignId 
+				+ "&groupId=" + groupId + "&metric=" + metric;
+		if(StringUtils.hasText(groupMode)) {
+			uri = uri + "&groupMode=" + groupMode;
+		}
+		if(StringUtils.hasText(mean)) {
+			uri = uri + "&mean=" + mean;
+		}
+		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
+			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
+		}
+		ParameterizedTypeReference<List<TransportStat>> ref = new ParameterizedTypeReference<List<TransportStat>>() {};
+		return webClient.get()
+				.uri(uri)
+				.attributes(clientRegistrationId("oauthprovider"))
+				.retrieve()
+				.bodyToMono(ref)
+				.block();		
+    }
+
+    public List<TransportStat> getGroupTransportStatsGroupByMean(String groupId, String campaignId, String metric,
+            String dateFrom, String dateTo) {
+		String uri = "/api/report/group/transport/stats/mean?campaignId=" + campaignId 
+				+ "&groupId=" + groupId + "&metric=" + metric;
+		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
+			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
+		}
+		ParameterizedTypeReference<List<TransportStat>> ref = new ParameterizedTypeReference<List<TransportStat>>() {};
+		return webClient.get()
+				.uri(uri)
+				.attributes(clientRegistrationId("oauthprovider"))
+				.retrieve()
+				.bodyToMono(ref)
+				.block();		    	
+    }
+    
+    public List<GameStats> getGroupGameStats(String groupId, String campaignId, String groupMode, 
+            String dateFrom, String dateTo) {
+		String uri = "/api/report/group/game/stats?campaignId=" + campaignId 
+				+ "&groupId=" + groupId + "&groupMode=" + groupMode;
+		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
+			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
+		}
+		ParameterizedTypeReference<List<GameStats>> ref = new ParameterizedTypeReference<List<GameStats>>() {};
+		return webClient.get()
+				.uri(uri)
+				.attributes(clientRegistrationId("oauthprovider"))
+				.retrieve()
+				.bodyToMono(ref)
+				.block();		    	    	
+    }
+
+	public RestPage<CampaignPlacing> getCampaignPlacingByGame(String campaignId,  
+			String dateFrom, String dateTo, Pageable pageRequest) {
+		String uri = "/api/report/campaign/placing/game?campaignId=" + campaignId + "&groupByGroupId=true";
+		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
+			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
+		}
+		uri = uri + "&size=" + pageRequest.getPageSize() + "&page=" + pageRequest.getPageNumber();
+		ParameterizedTypeReference<RestPage<CampaignPlacing>> ref = new ParameterizedTypeReference<RestPage<CampaignPlacing>>() {};
+		return webClient.get()
+				.uri(uri)
+				.attributes(clientRegistrationId("oauthprovider"))
+				.retrieve()
+				.bodyToMono(ref)
+				.block();
+	}
+	
+    public CampaignPlacing getCampaignPlacingByGameAndGroup(String groupId, String campaignId,
+            String dateFrom, String dateTo) {
+		String uri = "/api/report/campaign/placing/group/game?campaignId=" + campaignId 
+				+ "&groupId=" + groupId;
+		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
+			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
+		}
+		return webClient.get()
+				.uri(uri)
+				.attributes(clientRegistrationId("oauthprovider"))
+				.retrieve()
+				.bodyToMono(CampaignPlacing.class)
+				.block();    	    	
+    }
+
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"pageable"})
 	public static class RestPage<T> extends PageImpl<T> {
 		private static final long serialVersionUID = -2872613325721095097L;

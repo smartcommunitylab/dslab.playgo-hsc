@@ -31,7 +31,7 @@ public class PlayerTeam {
 	private String id;
 	private String initiativeId;
 	private String owner;
-	private Set<String> members;
+	private Set<TeamMember> members;
 	private Integer expected;
 	
 	private Map<String, Object> customData;
@@ -48,10 +48,10 @@ public class PlayerTeam {
 	public void setOwner(String owner) {
 		this.owner = owner;
 	}
-	public Set<String> getMembers() {
+	public Set<TeamMember> getMembers() {
 		return members;
 	}
-	public void setMembers(Set<String> members) {
+	public void setMembers(Set<TeamMember> members) {
 		this.members = members;
 	}
 	public Map<String, Object> getCustomData() {
@@ -71,5 +71,4 @@ public class PlayerTeam {
 	}
 	public void setInitiativeId(String initiativeId) {
 		this.initiativeId = initiativeId;
-	}
-}
+	}}
