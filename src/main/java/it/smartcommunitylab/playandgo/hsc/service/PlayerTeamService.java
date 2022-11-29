@@ -176,26 +176,6 @@ public class PlayerTeamService {
 			tm.setSubscribed(false);
 		}
 		team = teamRepo.save(team);
-//		try {
-//			// try to subscribe
-//			for (String nickName: toAdd) {
-//				Map<String, Object> data = new HashMap<>(team.getCustomData());
-//				data.put("teamId", team.getId());
-//				engineService.subscribe(initiative.getInitiativeId(), nickName, team.getCustomData());
-//			}
-//			team = teamRepo.save(team);
-//		} catch (Exception e) {
-//			logger.error("Failed to subscribe: " + e.getMessage(), e);
-//			// subscription / save failed: undo subscribe
-//			for (String nickName: toAdd) {
-//				try {
-//					engineService.unsubscribe(initiative.getInitiativeId(), nickName);
-//				} catch (Exception e1) {
-//					logger.error("Failed to clean subscription "+ e1.getMessage());
-//				}
-//			}
-//			throw e;
-//		}
 		// remove not used
 		for (TeamMember tm : toRemove) {
 			if(tm.isSubscribed()) {
@@ -341,7 +321,7 @@ public class PlayerTeamService {
 		return list;
 	}
 	
-	@Scheduled(fixedDelay=1000*60*60*24, initialDelay = 1000*60*60) 
+	@Scheduled(fixedDelay=1000*60*2, initialDelay = 1000*15) 
 	public void syncExternalCampaigns() {
 		List<Campaign> campaigns = engineService.getCampaigns();
 		for (Campaign c : campaigns) {

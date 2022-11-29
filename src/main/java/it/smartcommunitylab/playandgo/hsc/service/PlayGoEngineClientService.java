@@ -119,7 +119,7 @@ public class PlayGoEngineClientService {
 		return 
 		webClient.get()
 		.uri("/publicapi/campaign?type=school")
-		.attributes(clientRegistrationId("oauthprovider"))
+		//.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(ref)
 		.block();
