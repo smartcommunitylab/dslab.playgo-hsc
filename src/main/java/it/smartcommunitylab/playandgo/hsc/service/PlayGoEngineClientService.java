@@ -43,7 +43,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignSubscription;
-import it.smartcommunitylab.playandgo.hsc.domain.GameStats;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.TeamMember;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;

@@ -33,12 +33,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.annotations.ApiParam;
-import it.smartcommunitylab.playandgo.hsc.domain.GameStats;
 import it.smartcommunitylab.playandgo.hsc.domain.Avatar;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
+import it.smartcommunitylab.playandgo.hsc.dto.GameStats;
 import it.smartcommunitylab.playandgo.hsc.error.HSCError;
 import it.smartcommunitylab.playandgo.hsc.service.AvatarService;
 import it.smartcommunitylab.playandgo.hsc.service.PlayerTeamService;

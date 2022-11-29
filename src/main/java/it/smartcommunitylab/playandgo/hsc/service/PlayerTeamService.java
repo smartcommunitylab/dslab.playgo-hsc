@@ -18,6 +18,7 @@ package it.smartcommunitylab.playandgo.hsc.service;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,12 +43,13 @@ import com.google.common.cache.LoadingCache;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignGroupPlacing;
-import it.smartcommunitylab.playandgo.hsc.domain.GameStats;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
+import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeamStats;
 import it.smartcommunitylab.playandgo.hsc.domain.TeamMember;
 import it.smartcommunitylab.playandgo.hsc.domain.UserRole;
+import it.smartcommunitylab.playandgo.hsc.dto.GameStats;
 import it.smartcommunitylab.playandgo.hsc.error.DataException;
 import it.smartcommunitylab.playandgo.hsc.error.HSCError;
 import it.smartcommunitylab.playandgo.hsc.error.NotFoundException;
