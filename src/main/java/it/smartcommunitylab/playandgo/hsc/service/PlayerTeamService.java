@@ -321,7 +321,7 @@ public class PlayerTeamService {
 		return list;
 	}
 	
-	@Scheduled(fixedDelay=1000*60*2, initialDelay = 1000*15) 
+	@Scheduled(fixedDelay=1000*60*60*24, initialDelay = 1000*60*60) 
 	public void syncExternalCampaigns() {
 		List<Campaign> campaigns = engineService.getCampaigns();
 		for (Campaign c : campaigns) {
