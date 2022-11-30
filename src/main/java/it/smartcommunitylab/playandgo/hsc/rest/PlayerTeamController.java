@@ -149,6 +149,19 @@ public class PlayerTeamController {
 			HttpServletRequest request) throws HSCError {
 		return avatarService.getTeamAvatar(teamId);
 	}
+	
+	@GetMapping("/api/initiatives/{initiativeId}/team/{teamId}/public")
+	public PlayerTeam getPublicTeamInfo(
+			@PathVariable String initiativeId, 
+			@PathVariable String teamId) throws HSCError {
+		return teamService.getPublicTeamInfo(initiativeId, teamId);
+	}
 
+	@GetMapping("/api/initiatives/{initiativeId}/team/{teamId}/my")
+	public PlayerTeam getMyTeamInfo(
+			@PathVariable String initiativeId, 
+			@PathVariable String teamId) throws HSCError {
+		return teamService.getMyTeamInfo(initiativeId, teamId);
+	}
 
 }

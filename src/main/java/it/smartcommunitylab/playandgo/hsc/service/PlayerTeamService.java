@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -41,6 +42,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
+import it.smartcommunitylab.playandgo.hsc.domain.Image;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
@@ -71,10 +73,16 @@ public class PlayerTeamService {
 	
 	@Autowired
 	private PlayGoEngineClientService engineService;
+	
 	@Autowired
 	private InitiativeRepository initiativeRepo;
+	
 	@Autowired
 	private PlayerTeamRepository teamRepo;
+	
+	@Autowired
+	private AvatarService avatarService;
+	
 	@Autowired
 	private SecurityHelper securityHelper;
 
@@ -432,10 +440,76 @@ public class PlayerTeamService {
 			.map(tm -> tm.getPlayerId())
 			.collect(Collectors.toList());
 		return engineService.getPlayersWithAvatars(initiative.getCampaign().getTerritoryId(), players);
-		
 	}
 
-
+	public PlayerTeam getPublicTeamInfo(String initiativeId, String teamId) throws HSCError {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}		
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if (team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		return getPublicTeamInfo(team);
+	}
+	
+	public PlayerTeam getMyTeamInfo(String initiativeId, String teamId) throws HSCError {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}		
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if (team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		//TODO get playerId instead email
+//		String playerId = securityHelper.getCurrentPreferredUsername();
+//		if(!team.getMembers().stream().anyMatch(m -> m.getPlayerId().equals(playerId))) {
+//			throw new OperationNotPermittedException("NO_TEAM");
+//		}
+		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
+		if(avatar != null) {
+			team.setAvatar(avatar);
+		}
+		List<String> players = team.getMembers().stream()
+				.map(tm -> tm.getPlayerId())
+				.collect(Collectors.toList());
+		List<PlayerInfo> list = engineService.getPlayersWithAvatars(initiative.getCampaign().getTerritoryId(), players);
+		Map<String, PlayerInfo> map = list.stream().collect(Collectors.toMap(PlayerInfo::getPlayerId, Function.identity()));
+		team.getMembers().forEach(m -> {
+			PlayerInfo playerInfo = map.get(m.getPlayerId());
+			if((playerInfo != null) && (playerInfo.getAvatar() != null)) {
+				m.setAvatar(playerInfo.getAvatar());
+			}
+		});		
+		return team;
+	}
+	
+	private PlayerTeam getPublicTeamInfo(PlayerTeam team) {
+		PlayerTeam publicTeam = new PlayerTeam();
+		publicTeam.setId(team.getId());
+		publicTeam.setInitiativeId(team.getInitiativeId());
+		publicTeam.setExpected(team.getExpected());
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_NAME)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_NAME, team.getCustomData().get(PlayerTeamService.KEY_NAME));
+		}
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_INSTITUTE)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_INSTITUTE, team.getCustomData().get(PlayerTeamService.KEY_INSTITUTE));
+		}
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_SCHOOL)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_SCHOOL, team.getCustomData().get(PlayerTeamService.KEY_SCHOOL));
+		}
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_CLASS)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_CLASS, team.getCustomData().get(PlayerTeamService.KEY_CLASS));
+		}
+		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
+		if(avatar != null) {
+			publicTeam.setAvatar(avatar);
+		}
+		return publicTeam;
+	}
+	
 	public static class TeamClassification {
 		private String id;
 		private Double score;
