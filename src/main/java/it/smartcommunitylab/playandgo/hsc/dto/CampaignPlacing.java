@@ -1,5 +1,8 @@
 package it.smartcommunitylab.playandgo.hsc.dto;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import it.smartcommunitylab.playandgo.hsc.domain.Image;
 
 public class CampaignPlacing {
@@ -9,6 +12,7 @@ public class CampaignPlacing {
 	private double value = 0.0;
 	private int position;
 	private Image avatar;
+	private Map<String, Object> customData = new HashMap<>();
 	
 	public String getPlayerId() {
 		return playerId;
@@ -46,5 +50,11 @@ public class CampaignPlacing {
     public void setGroupId(String groupId) {
         this.groupId = groupId;
     }
+	public Map<String, Object> getCustomData() {
+		return customData;
+	}
+	public void setCustomData(Map<String, Object> customData) {
+		this.customData = customData;
+	}
 	
 }

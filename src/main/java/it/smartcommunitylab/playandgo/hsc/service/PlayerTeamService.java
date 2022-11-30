@@ -63,7 +63,12 @@ import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
 public class PlayerTeamService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(PlayerTeamService.class);
-
+	
+	public static final String KEY_NAME = "name";
+	public static final String KEY_INSTITUTE = "institute";
+	public static final String KEY_SCHOOL = "school";
+	public static final String KEY_CLASS = "cls";
+	
 	@Autowired
 	private PlayGoEngineClientService engineService;
 	@Autowired
