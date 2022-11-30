@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -41,6 +42,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
+import it.smartcommunitylab.playandgo.hsc.domain.Image;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerInfo;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
@@ -63,13 +65,24 @@ import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
 public class PlayerTeamService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(PlayerTeamService.class);
-
+	
+	public static final String KEY_NAME = "name";
+	public static final String KEY_INSTITUTE = "institute";
+	public static final String KEY_SCHOOL = "school";
+	public static final String KEY_CLASS = "cls";
+	
 	@Autowired
 	private PlayGoEngineClientService engineService;
+	
 	@Autowired
 	private InitiativeRepository initiativeRepo;
+	
 	@Autowired
 	private PlayerTeamRepository teamRepo;
+	
+	@Autowired
+	private AvatarService avatarService;
+	
 	@Autowired
 	private SecurityHelper securityHelper;
 
@@ -176,26 +189,6 @@ public class PlayerTeamService {
 			tm.setSubscribed(false);
 		}
 		team = teamRepo.save(team);
-//		try {
-//			// try to subscribe
-//			for (String nickName: toAdd) {
-//				Map<String, Object> data = new HashMap<>(team.getCustomData());
-//				data.put("teamId", team.getId());
-//				engineService.subscribe(initiative.getInitiativeId(), nickName, team.getCustomData());
-//			}
-//			team = teamRepo.save(team);
-//		} catch (Exception e) {
-//			logger.error("Failed to subscribe: " + e.getMessage(), e);
-//			// subscription / save failed: undo subscribe
-//			for (String nickName: toAdd) {
-//				try {
-//					engineService.unsubscribe(initiative.getInitiativeId(), nickName);
-//				} catch (Exception e1) {
-//					logger.error("Failed to clean subscription "+ e1.getMessage());
-//				}
-//			}
-//			throw e;
-//		}
 		// remove not used
 		for (TeamMember tm : toRemove) {
 			if(tm.isSubscribed()) {
@@ -447,10 +440,76 @@ public class PlayerTeamService {
 			.map(tm -> tm.getPlayerId())
 			.collect(Collectors.toList());
 		return engineService.getPlayersWithAvatars(initiative.getCampaign().getTerritoryId(), players);
-		
 	}
 
-
+	public PlayerTeam getPublicTeamInfo(String initiativeId, String teamId) throws HSCError {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}		
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if (team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		return getPublicTeamInfo(team);
+	}
+	
+	public PlayerTeam getMyTeamInfo(String initiativeId, String teamId) throws HSCError {
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}		
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if (team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		//TODO get playerId instead email
+//		String playerId = securityHelper.getCurrentPreferredUsername();
+//		if(!team.getMembers().stream().anyMatch(m -> m.getPlayerId().equals(playerId))) {
+//			throw new OperationNotPermittedException("NO_TEAM");
+//		}
+		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
+		if(avatar != null) {
+			team.setAvatar(avatar);
+		}
+		List<String> players = team.getMembers().stream()
+				.map(tm -> tm.getPlayerId())
+				.collect(Collectors.toList());
+		List<PlayerInfo> list = engineService.getPlayersWithAvatars(initiative.getCampaign().getTerritoryId(), players);
+		Map<String, PlayerInfo> map = list.stream().collect(Collectors.toMap(PlayerInfo::getPlayerId, Function.identity()));
+		team.getMembers().forEach(m -> {
+			PlayerInfo playerInfo = map.get(m.getPlayerId());
+			if((playerInfo != null) && (playerInfo.getAvatar() != null)) {
+				m.setAvatar(playerInfo.getAvatar());
+			}
+		});		
+		return team;
+	}
+	
+	private PlayerTeam getPublicTeamInfo(PlayerTeam team) {
+		PlayerTeam publicTeam = new PlayerTeam();
+		publicTeam.setId(team.getId());
+		publicTeam.setInitiativeId(team.getInitiativeId());
+		publicTeam.setExpected(team.getExpected());
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_NAME)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_NAME, team.getCustomData().get(PlayerTeamService.KEY_NAME));
+		}
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_INSTITUTE)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_INSTITUTE, team.getCustomData().get(PlayerTeamService.KEY_INSTITUTE));
+		}
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_SCHOOL)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_SCHOOL, team.getCustomData().get(PlayerTeamService.KEY_SCHOOL));
+		}
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_CLASS)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_CLASS, team.getCustomData().get(PlayerTeamService.KEY_CLASS));
+		}
+		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
+		if(avatar != null) {
+			publicTeam.setAvatar(avatar);
+		}
+		return publicTeam;
+	}
+	
 	public static class TeamClassification {
 		private String id;
 		private Double score;

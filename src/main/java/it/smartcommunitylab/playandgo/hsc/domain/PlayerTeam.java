@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 
 /**
  * @author raman
@@ -35,6 +36,9 @@ public class PlayerTeam {
 	private Integer expected;
 	
 	private Map<String, Object> customData;
+	
+	@Transient
+	private Image avatar;
 	
 	public String getId() {
 		return id;
@@ -71,4 +75,10 @@ public class PlayerTeam {
 	}
 	public void setInitiativeId(String initiativeId) {
 		this.initiativeId = initiativeId;
+	}
+	public Image getAvatar() {
+		return avatar;
+	}
+	public void setAvatar(Image avatar) {
+		this.avatar = avatar;
 	}}

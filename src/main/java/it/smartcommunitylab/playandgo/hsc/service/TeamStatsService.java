@@ -28,12 +28,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import it.smartcommunitylab.playandgo.hsc.domain.Image;
 import it.smartcommunitylab.playandgo.hsc.domain.PlayerTeam;
 import it.smartcommunitylab.playandgo.hsc.dto.CampaignPlacing;
 import it.smartcommunitylab.playandgo.hsc.dto.GameStats;
 import it.smartcommunitylab.playandgo.hsc.dto.PlacingComparison;
 import it.smartcommunitylab.playandgo.hsc.dto.TransportStat;
 import it.smartcommunitylab.playandgo.hsc.repository.PlayerTeamRepository;
+import it.smartcommunitylab.playandgo.hsc.service.PlayGoEngineClientService.RestPage;
 
 /**
  * @author nori
@@ -46,8 +48,12 @@ public class TeamStatsService {
 
 	@Autowired
 	private PlayGoEngineClientService engineService;
+	
 	@Autowired
 	private PlayerTeamRepository teamRepo;
+	
+	@Autowired
+	private AvatarService avatarService;
 
 	@PostConstruct
 	private void init() {			
@@ -55,12 +61,16 @@ public class TeamStatsService {
 	
 	public Page<CampaignPlacing> getCampaignPlacing(String campaignId, String metric, String mean,  
 			String dateFrom, String dateTo, Pageable pageRequest) {
-		return engineService.getCampaignPlacing(campaignId, metric, mean, dateFrom, dateTo, pageRequest);
+		RestPage<CampaignPlacing> page = engineService.getCampaignPlacing(campaignId, metric, mean, dateFrom, dateTo, pageRequest);
+		page.getContent().forEach(c -> updatePlacing(c));
+		return page;
 	}
 	
     public CampaignPlacing getCampaignPlacingByGroup(String groupId, String campaignId, 
             String metric, String mean, String dateFrom, String dateTo) {
-    	return engineService.getCampaignPlacingByGroup(groupId, campaignId, metric, mean, dateFrom, dateTo);
+    	CampaignPlacing placing = engineService.getCampaignPlacingByGroup(groupId, campaignId, metric, mean, dateFrom, dateTo);
+    	updatePlacing(placing);
+    	return placing;
     }
     
     public List<TransportStat> getGroupTransportStats(String groupId, String campaignId, String groupMode, String metric, 
@@ -90,12 +100,16 @@ public class TeamStatsService {
     
 	public Page<CampaignPlacing> getCampaignPlacingByGame(String campaignId,  
 			String dateFrom, String dateTo, Pageable pageRequest) {
-		return engineService.getCampaignPlacingByGame(campaignId, dateFrom, dateTo, pageRequest);
+		RestPage<CampaignPlacing> page = engineService.getCampaignPlacingByGame(campaignId, dateFrom, dateTo, pageRequest);
+		page.getContent().forEach(c -> updatePlacing(c));
+		return page;
 	}
     
     public CampaignPlacing getCampaignPlacingByGameAndGroup(String groupId, String campaignId,
             String dateFrom, String dateTo) {
-    	return engineService.getCampaignPlacingByGameAndGroup(groupId, campaignId, dateFrom, dateTo);
+    	CampaignPlacing placing = engineService.getCampaignPlacingByGameAndGroup(groupId, campaignId, dateFrom, dateTo);
+    	updatePlacing(placing);
+    	return placing;    	
     }
 
     public PlacingComparison getCampaignPlacingByGameComparison(String groupId, String campaignId,
@@ -130,4 +144,27 @@ public class TeamStatsService {
     	}
     	return result;
     }
+    
+    private void updatePlacing(CampaignPlacing c) {
+		Image avatar = avatarService.getTeamSmallAvatar(c.getGroupId());
+		if(avatar != null) {
+			c.setAvatar(avatar);
+		}
+    	PlayerTeam team = teamRepo.findById(c.getGroupId()).orElse(null);
+    	if(team != null) {
+    		if(team.getCustomData().containsKey(PlayerTeamService.KEY_NAME)) {
+    			c.getCustomData().put(PlayerTeamService.KEY_NAME, team.getCustomData().get(PlayerTeamService.KEY_NAME));
+    		}
+    		if(team.getCustomData().containsKey(PlayerTeamService.KEY_INSTITUTE)) {
+    			c.getCustomData().put(PlayerTeamService.KEY_INSTITUTE, team.getCustomData().get(PlayerTeamService.KEY_INSTITUTE));
+    		}
+    		if(team.getCustomData().containsKey(PlayerTeamService.KEY_SCHOOL)) {
+    			c.getCustomData().put(PlayerTeamService.KEY_SCHOOL, team.getCustomData().get(PlayerTeamService.KEY_SCHOOL));
+    		}
+    		if(team.getCustomData().containsKey(PlayerTeamService.KEY_CLASS)) {
+    			c.getCustomData().put(PlayerTeamService.KEY_CLASS, team.getCustomData().get(PlayerTeamService.KEY_CLASS));
+    		}
+    	}
+    }
+    
 }

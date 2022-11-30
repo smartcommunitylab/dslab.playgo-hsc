@@ -4,6 +4,7 @@ public class TeamMember {
 	private String playerId;
 	private String nickname;
 	private boolean subscribed = false;
+	private Image avatar;
 	
 	public TeamMember() {}
 	
@@ -42,5 +43,13 @@ public class TeamMember {
 	@Override
 	public int hashCode() {
 		return getNickname().hashCode();
+	}
+
+	public Image getAvatar() {
+		return avatar;
+	}
+
+	public void setAvatar(Image avatar) {
+		this.avatar = avatar;
 	}
 }
