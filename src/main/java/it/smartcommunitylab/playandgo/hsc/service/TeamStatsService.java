@@ -62,14 +62,14 @@ public class TeamStatsService {
 	public Page<CampaignPlacing> getCampaignPlacing(String campaignId, String metric, String mean,  
 			String dateFrom, String dateTo, Pageable pageRequest) {
 		RestPage<CampaignPlacing> page = engineService.getCampaignPlacing(campaignId, metric, mean, dateFrom, dateTo, pageRequest);
-		page.getContent().forEach(c -> updatePlacing(c));
+		page.getContent().forEach(c -> updatePlacing(c, null));
 		return page;
 	}
 	
     public CampaignPlacing getCampaignPlacingByGroup(String groupId, String campaignId, 
             String metric, String mean, String dateFrom, String dateTo) {
     	CampaignPlacing placing = engineService.getCampaignPlacingByGroup(groupId, campaignId, metric, mean, dateFrom, dateTo);
-    	updatePlacing(placing);
+    	updatePlacing(placing, groupId);
     	return placing;
     }
     
@@ -101,14 +101,14 @@ public class TeamStatsService {
 	public Page<CampaignPlacing> getCampaignPlacingByGame(String campaignId,  
 			String dateFrom, String dateTo, Pageable pageRequest) {
 		RestPage<CampaignPlacing> page = engineService.getCampaignPlacingByGame(campaignId, dateFrom, dateTo, pageRequest);
-		page.getContent().forEach(c -> updatePlacing(c));
+		page.getContent().forEach(c -> updatePlacing(c, null));
 		return page;
 	}
     
     public CampaignPlacing getCampaignPlacingByGameAndGroup(String groupId, String campaignId,
             String dateFrom, String dateTo) {
     	CampaignPlacing placing = engineService.getCampaignPlacingByGameAndGroup(groupId, campaignId, dateFrom, dateTo);
-    	updatePlacing(placing);
+    	updatePlacing(placing, groupId);
     	return placing;    	
     }
 
@@ -145,12 +145,15 @@ public class TeamStatsService {
     	return result;
     }
     
-    private void updatePlacing(CampaignPlacing c) {
+    private void updatePlacing(CampaignPlacing c, String groupId) {
 		Image avatar = avatarService.getTeamSmallAvatar(c.getGroupId());
 		if(avatar != null) {
 			c.setAvatar(avatar);
 		}
-    	PlayerTeam team = teamRepo.findById(c.getGroupId()).orElse(null);
+		if(groupId == null) {
+			groupId = c.getGroupId();
+		}
+    	PlayerTeam team = teamRepo.findById(groupId).orElse(null);
     	if(team != null) {
     		if(team.getCustomData().containsKey(PlayerTeamService.KEY_NAME)) {
     			c.getCustomData().put(PlayerTeamService.KEY_NAME, team.getCustomData().get(PlayerTeamService.KEY_NAME));
