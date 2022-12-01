@@ -243,6 +243,7 @@
             	 // append also current members to appear as chips
             	 this.currTeam.members.forEach(m => {
             		  if (!remote.some(c => c.nickname == m.nickname)) {
+										m.disabled = m.subscribed;
             			  remote.push(m);
             		  }
            	   });            	 
