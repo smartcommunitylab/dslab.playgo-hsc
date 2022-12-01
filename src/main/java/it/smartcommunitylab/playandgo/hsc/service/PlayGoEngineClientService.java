@@ -107,7 +107,7 @@ public class PlayGoEngineClientService {
 		ParameterizedTypeReference<RestPage<PlayerInfo>> ref = new ParameterizedTypeReference<RestPage<PlayerInfo>>() {};
 		return 
 		webClient.get()
-		.uri("/api/ext/territory/players?territory="+territory + "&txt="+(txt == null ? "" : txt.trim()))
+		.uri("/api/ext/territory/players?territory="+territory + "&size=" + pageRequest.getPageSize() + "&txt="+(txt == null ? "" : txt.trim()))
 		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 		.retrieve()
 		.bodyToMono(ref)
