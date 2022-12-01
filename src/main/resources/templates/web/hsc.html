@@ -46,7 +46,7 @@
                 <td>{{team.customData.institute}}</td>
                 <td>{{team.customData.school}}</td>
                 <td>{{team.customData.cls}}</td>
-                <td>{{ (team.score || 0) | fmt}}</td>
+                <td>{{(team.value || 0) | fmt}}</td>
               </tr>
             </tbody>
           </template>
@@ -65,7 +65,10 @@
 		  if (!value) return '0'
 		  return value.toFixed(0);
 		})
-
+    var token = sessionStorage.access_token;
+    var conf = {headers: {
+    	Authorization: `Bearer ${token}`
+    }};
     new Vue({
       el: '#app',
       vuetify: new Vuetify(),
@@ -83,8 +86,9 @@
       methods: {
     	  load() {
     		    this.loading = true;
-  	        axios.get(`../../publicapi/${INITIATIVE.initiativeId}/board`).then((data) => {
-  	            this.teams = data.data;
+    		    var url = '../../api/data/campaign/placing/game?campaignId=' + INITIATIVE.initiativeId; 
+  	        axios.get(url, conf).then((data) => {
+  	            this.teams = data.data.content;
  	              this.loading = false;  	            	
  	          });    		  
     	  }
