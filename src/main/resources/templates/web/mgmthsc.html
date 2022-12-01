@@ -275,7 +275,7 @@
 					team.members.forEach(tm => {
 						list = list + tm.nickname + ', ';
 					});
-					return list;
+					return list.slice(0, -2);
 				},
     	  createNew() {
     		  this.currTeam = {members: [], customData: {}};
