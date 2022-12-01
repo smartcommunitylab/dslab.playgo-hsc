@@ -233,7 +233,7 @@
       },
       methods: {
     	  getCandidates: function(val) {
-           axios.get(`../../../api/initiatives/${INITIATIVE.initiativeId}/team/candidates?txt=${!!val ? val :''}`, conf).then((data) => {
+           axios.get(`../../../api/initiatives/${INITIATIVE.initiativeId}/team/candidates?size=1000&txt=${!!val ? val :''}`, conf).then((data) => {
         	   // disabled if subscribed by another team
              var remote = data.data.content.map(c => {
 							c.disabled = c.subscribed && (!this.currTeam || this.currTeam.members.some(m => m.nickname == c.nickname));
