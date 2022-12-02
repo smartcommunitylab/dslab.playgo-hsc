@@ -1,27 +1,28 @@
 package it.smartcommunitylab.playandgo.hsc.dto;
 
 public class PlacingComparison {
-	private CampaignPlacing prevPlacing;
-	private CampaignPlacing myPlacing;
-	private CampaignPlacing nextPlacing;
+	private double min = 0.0;
+	private double max = 0.0;
+	private double value = 0.0;
 	
-	public CampaignPlacing getPrevPlacing() {
-		return prevPlacing;
+	public double getMin() {
+		return min;
 	}
-	public void setPrevPlacing(CampaignPlacing prevPlacing) {
-		this.prevPlacing = prevPlacing;
+	public void setMin(double min) {
+		this.min = min;
 	}
-	public CampaignPlacing getMyPlacing() {
-		return myPlacing;
+	public double getMax() {
+		return max;
 	}
-	public void setMyPlacing(CampaignPlacing myPlacing) {
-		this.myPlacing = myPlacing;
+	public void setMax(double max) {
+		this.max = max;
 	}
-	public CampaignPlacing getNextPlacing() {
-		return nextPlacing;
+	public double getValue() {
+		return value;
 	}
-	public void setNextPlacing(CampaignPlacing nextPlacing) {
-		this.nextPlacing = nextPlacing;
+	public void setValue(double value) {
+		this.value = value;
 	}
+	
 	
 }
