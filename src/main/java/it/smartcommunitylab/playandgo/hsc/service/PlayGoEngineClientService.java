@@ -236,8 +236,8 @@ public class PlayGoEngineClientService {
     }
 
 	public RestPage<CampaignPlacing> getCampaignPlacingByGame(String campaignId,  
-			String dateFrom, String dateTo, Pageable pageRequest) {
-		String uri = "/api/report/campaign/placing/game?campaignId=" + campaignId + "&groupByGroupId=true";
+			String dateFrom, String dateTo, boolean groupByGroupId, Pageable pageRequest) {
+		String uri = "/api/report/campaign/placing/game?campaignId=" + campaignId + "&groupByGroupId=" + groupByGroupId;
 		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
 			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
 		}

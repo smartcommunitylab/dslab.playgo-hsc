@@ -117,13 +117,21 @@ public class TeamStatsController {
     }
     
     @GetMapping("/api/data/campaign/placing/group/game/comparison")
-    public PlacingComparison getCampaignPlacingByGameComparison(
+    public PlacingComparison getCampaignPlacingByGameGroupComparison(
             @RequestParam String campaignId,
             @RequestParam String groupId,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateFrom,
             @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo) {
-    	return teamStatsService.getCampaignPlacingByGameComparison(groupId, campaignId, dateFrom, dateTo);
+    	return teamStatsService.getCampaignPlacingByGameGroupComparison(groupId, campaignId, dateFrom, dateTo);
     }
 
+    @GetMapping("/api/data/campaign/placing/player/game/comparison")
+    public PlacingComparison getCampaignPlacingByGamePlayerComparison(
+            @RequestParam String campaignId,
+            @RequestParam String playerId,
+            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateFrom,
+            @RequestParam(required = false) @ApiParam(value = "yyyy-MM-dd") String dateTo) {
+    	return teamStatsService.getCampaignPlacingByGamePlayerComparison(playerId, campaignId, dateFrom, dateTo);
+    }
 
 }

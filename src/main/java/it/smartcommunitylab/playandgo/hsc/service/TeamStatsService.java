@@ -100,7 +100,7 @@ public class TeamStatsService {
     
 	public Page<CampaignPlacing> getCampaignPlacingByGame(String campaignId,  
 			String dateFrom, String dateTo, Pageable pageRequest) {
-		RestPage<CampaignPlacing> page = engineService.getCampaignPlacingByGame(campaignId, dateFrom, dateTo, pageRequest);
+		RestPage<CampaignPlacing> page = engineService.getCampaignPlacingByGame(campaignId, dateFrom, dateTo, true, pageRequest);
 		page.getContent().forEach(c -> updatePlacing(c, null));
 		return page;
 	}
@@ -112,39 +112,47 @@ public class TeamStatsService {
     	return placing;    	
     }
 
-    public PlacingComparison getCampaignPlacingByGameComparison(String groupId, String campaignId,
+    public PlacingComparison getCampaignPlacingByGameGroupComparison(String groupId, String campaignId,
             String dateFrom, String dateTo) {
-    	PlacingComparison result = new PlacingComparison(); 
+    	PlacingComparison result = new PlacingComparison();
+    	result.setMin(Double.MAX_VALUE);
     	//get campaign placing
     	List<CampaignPlacing> list = getCampaignPlacingByGame(campaignId, dateFrom, dateTo, PageRequest.of(0, 1000)).getContent();
-    	//find my placing
-    	int myPos = -1;
     	for(CampaignPlacing cp : list) {
     		if(cp.getGroupId().equals(groupId)) {
-    			result.setMyPlacing(cp);
-    			myPos = cp.getPosition();
+    			result.setValue(cp.getValue());
     		}
-    	}
-    	if(myPos == -1) {
-    		//last position
-    		myPos = list.size() + 1;
-    		CampaignPlacing myCp = new CampaignPlacing();
-    		myCp.setGroupId(groupId);
-    		myCp.setPosition(myPos);
-    		myCp.setValue(0.0);
-    		result.setMyPlacing(myCp);
-    	}
-    	int prevPos = myPos - 1;
-    	if(prevPos > 0) {
-    		result.setPrevPlacing(list.get(prevPos - 1));
-    	}
-    	int nextPos = myPos + 1;
-    	if(nextPos <= list.size()) {
-    		result.setNextPlacing(list.get(nextPos - 1));
+    		if(cp.getValue() > result.getMax()) {
+    			result.setMax(cp.getValue());
+    		}
+    		if(cp.getValue() < result.getMin()) {
+    			result.setMin(cp.getValue());
+    		}
     	}
     	return result;
     }
     
+	public PlacingComparison getCampaignPlacingByGamePlayerComparison(String playerId, String campaignId,
+			String dateFrom, String dateTo) {
+    	PlacingComparison result = new PlacingComparison();
+    	result.setMin(Double.MAX_VALUE);
+    	//get campaign placing
+    	List<CampaignPlacing> list = engineService.getCampaignPlacingByGame(campaignId, dateFrom, dateTo, false, 
+    			PageRequest.of(0, 5000)).getContent();
+    	for(CampaignPlacing cp : list) {
+    		if(cp.getPlayerId().equals(playerId)) {
+    			result.setValue(cp.getValue());
+    		}
+    		if(cp.getValue() > result.getMax()) {
+    			result.setMax(cp.getValue());
+    		}
+    		if(cp.getValue() < result.getMin()) {
+    			result.setMin(cp.getValue());
+    		}
+    	}
+    	return result;
+	}
+	
     private void updatePlacing(CampaignPlacing c, String groupId) {
 		Image avatar = avatarService.getTeamSmallAvatar(c.getGroupId());
 		if(avatar != null) {
@@ -169,5 +177,6 @@ public class TeamStatsService {
     		}
     	}
     }
+
     
 }
