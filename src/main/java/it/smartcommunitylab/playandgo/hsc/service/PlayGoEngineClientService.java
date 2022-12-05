@@ -97,7 +97,8 @@ public class PlayGoEngineClientService {
 		return 
 		webClient.get()
 		.uri(uri)
-		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
+//		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
+		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(ref)
 		.block();
@@ -108,7 +109,8 @@ public class PlayGoEngineClientService {
 		return 
 		webClient.get()
 		.uri("/api/ext/territory/players?territory="+territory + "&size=" + pageRequest.getPageSize() + "&txt="+(txt == null ? "" : txt.trim()))
-		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
+//		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
+		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(ref)
 		.block();

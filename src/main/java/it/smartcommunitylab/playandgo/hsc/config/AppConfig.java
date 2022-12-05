@@ -19,18 +19,26 @@ package it.smartcommunitylab.playandgo.hsc.config;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.endpoint.DefaultClientCredentialsTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2ClientCredentialsGrantRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -75,13 +83,59 @@ public class AppConfig implements WebMvcConfigurer {
 		return authorizedClientManager;
 	}
 
-	@Bean
-	WebClient webClient(OAuth2AuthorizedClientManager authorizedClientManager) {
-		ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client = new ServletOAuth2AuthorizedClientExchangeFilterFunction(
-				authorizedClientManager);
-		return WebClient.builder().baseUrl(engineUri).apply(oauth2Client.oauth2Configuration()).build();
-	}
+//	@Bean
+//	WebClient webClient(OAuth2AuthorizedClientManager authorizedClientManager) {
+//		ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client = new ServletOAuth2AuthorizedClientExchangeFilterFunction(
+//				authorizedClientManager);
+//		return WebClient.builder().baseUrl(engineUri).apply(oauth2Client.oauth2Configuration()).build();
+//	}
+//
+//	
+//	public class LoggingClientCredentialsTokenResponseClient
+//			implements OAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> {
+//
+//		private DefaultClientCredentialsTokenResponseClient delegate = new DefaultClientCredentialsTokenResponseClient();
+//		private final Logger log = LoggerFactory.getLogger(LoggingClientCredentialsTokenResponseClient.class);
+//
+//		@Override
+//		public OAuth2AccessTokenResponse getTokenResponse(
+//				OAuth2ClientCredentialsGrantRequest clientCredentialsGrantRequest) {
+//
+//			synchronized (delegate) {
+//				log.error("Sending request {}", clientCredentialsGrantRequest);
+//				OAuth2AccessTokenResponse response = delegate.getTokenResponse(clientCredentialsGrantRequest);
+//				log.error("Received response {}", response.getAccessToken().getTokenValue());
+//				return response;
+//			}
+//		}
+//	}
+	
+	@Bean // with spring-boot-starter-web
+	WebClient webClient(
+	    ClientRegistrationRepository clientRegistrationRepository,
+	    OAuth2AuthorizedClientService authorizedClientService
+	) {
+		
+//		OAuth2AuthorizedClientProvider authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder()
+//		        .clientCredentials(builder ->
+//		            builder.accessTokenResponseClient(
+//		                new LoggingClientCredentialsTokenResponseClient()))
+//		        .build();
 
+			AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
+		        new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+		            clientRegistrationRepository, authorizedClientService);
+//		    authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
+
+		ServletOAuth2AuthorizedClientExchangeFilterFunction oauth = new ServletOAuth2AuthorizedClientExchangeFilterFunction(
+				authorizedClientManager
+	    );
+	    return WebClient.builder()
+	      .baseUrl(engineUri)
+	      .apply(oauth.oauth2Configuration())
+	      .build();
+	}
+	
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**").allowedMethods("*");
