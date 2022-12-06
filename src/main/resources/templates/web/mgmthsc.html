@@ -76,19 +76,21 @@
 					    <v-list-item>
 					      <v-list-item-content>
 					        <v-list-item-title class="headline mb-1">
-					        <span v-for="(d, key, index) in team.customData"><b>{{key}}</b>: {{d}}<br></span>
+					        	<span v-for="(d, key, index) in team.customData"><b>{{key}}</b>: {{d}}<br></span>
 					        </v-list-item-title>
                   <v-list-item-subtitle v-if="isAdmin"><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-subtitle>
                   <v-list-item-subtitle><span  th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
 					        <v-list-item-subtitle>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
-					      </v-list-item-content>					
+					      </v-list-item-content>
+								<v-avatar size="125" tile>
+									<v-img v-if="team.avatar" :src="getImageUrlNoCache(team.avatar)"></v-img>
+								</v-avatar>					    
 					    </v-list-item>
-					
 					    <v-card-actions>
                 <v-btn color="primary" text @click="view(team)" th:text="#{teammgmt.btn_view}">View Board</v-btn>
 					      <v-btn v-if="isAdmin && !unauthorized && !loading" color="primary" text @click="editTeam(team)" th:text="#{teammgmt.btn_edit}">Edit</v-btn>
 					      <v-btn v-if="isAdmin && !unauthorized && !loading" color="error" @click="deleteTeam(team)" text th:text="#{teammgmt.btn_delete}">Delete</v-btn>
-					    </v-card-actions>
+					    </v-card-actions>					    
 					  </v-card>
 		      </v-col>
 		    </v-row>
@@ -119,8 +121,7 @@
               </v-col>
 
               <v-col cols="12">
-                <img :src="">
-                <v-file-input v-model="avatar" label="Avatar" required></v-file-input>
+	              <v-file-input v-model="avatar" label="Avatar" required></v-file-input>
               </v-col>
               
               <v-col cols="12">
@@ -288,6 +289,10 @@
                   this.loading = false;                                   
             });    		  
     	  },
+    	  getImageUrlNoCache(avatar) {
+					var d = new Date(); 
+					return avatar.url + '?ver=' + d.getTime();
+				},
     	  getTeamMemberList(team) {
 					var list = '';
 					team.members.forEach(tm => {
