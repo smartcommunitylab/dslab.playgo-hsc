@@ -18,6 +18,7 @@ package it.smartcommunitylab.playandgo.hsc.security;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -29,9 +30,11 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class SecurityHelper {
-
 	static Log logger = LogFactory.getLog(SecurityHelper.class);
-
+    
+	@Value("${spring.security.oauth2.client.registration.oauthprovider.client-id}")
+    private String jwtAudience;
+	
 	public String getCurrentToken() {
 		JwtAuthenticationToken authentication = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 		Jwt principal = (Jwt) authentication.getPrincipal();
@@ -65,6 +68,11 @@ public class SecurityHelper {
 		return subject;
 	}
 	
+	public boolean checkAPIRole() {
+		JwtAuthenticationToken authentication = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+		Jwt principal = (Jwt) authentication.getPrincipal();
+		return principal.getAudience().contains(jwtAudience);
+	}
 
 	
 }

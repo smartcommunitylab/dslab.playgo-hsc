@@ -16,6 +16,7 @@
 
 package it.smartcommunitylab.playandgo.hsc.service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -293,12 +294,15 @@ public class PlayerTeamService {
 		return null;
 	}
 	public List<PlayerTeam> getUserTeamsForInitiative(String initiativeId) {
+		List<PlayerTeam> result = new ArrayList<>();
 		List<Initiative> initiatives = getInitativesForManager();
 		if (initiatives.stream().anyMatch(i -> i.getInitiativeId().equals(initiativeId))) {
-			return teamRepo.findByInitiativeId(initiativeId); 
+			result = teamRepo.findByInitiativeId(initiativeId); 
 		} else {
-			return teamRepo.findByInitiativeIdAndOwner(initiativeId, securityHelper.getCurrentPreferredUsername());
+			result = teamRepo.findByInitiativeIdAndOwner(initiativeId, securityHelper.getCurrentPreferredUsername());
 		}
+		result.forEach(t -> addSmallAvatar(t));
+		return result;
 	}
 	
 	public void forceSync() {
@@ -407,24 +411,27 @@ public class PlayerTeamService {
 	}
 	
 	public String subscribeTeamMember(String initiativeId, String nickname) throws HSCError {
-		Initiative initiative = getInitiative(initiativeId);
-		if (initiative == null) {
-			throw new NotFoundException("NO_INITIATIVE");
-		}
-		List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiativeId);
-		for(PlayerTeam team : teams) {
-			for(TeamMember tm : team.getMembers()) {
-				if(tm.getNickname().equals(nickname)) {
-					if(tm.isSubscribed()) {
-						throw new NotFoundException("PLAYER_ALREADY_SUBSCRIBED");
+		if(securityHelper.checkAPIRole() || isAdmin(engineService.getUserRoles())) {
+			Initiative initiative = getInitiative(initiativeId);
+			if (initiative == null) {
+				throw new NotFoundException("NO_INITIATIVE");
+			}
+			List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiativeId);
+			for(PlayerTeam team : teams) {
+				for(TeamMember tm : team.getMembers()) {
+					if(tm.getNickname().equals(nickname)) {
+						if(tm.isSubscribed()) {
+							throw new NotFoundException("PLAYER_ALREADY_SUBSCRIBED");
+						}
+						tm.setSubscribed(true);
+						teamRepo.save(team);
+						return team.getId(); 
 					}
-					tm.setSubscribed(true);
-					teamRepo.save(team);
-					return team.getId(); 
-				}
-			}			
+				}			
+			}
+			throw new NotFoundException("PLAYER_NOT_PRESENT");
 		}
-		throw new NotFoundException("PLAYER_NOT_PRESENT");
+		throw new OperationNotEnabledException("SUBSCRIBE");
 	}
 	
 	public List<PlayerInfo> getPlayerTeamInfo(String initiativeId, String teamId) throws HSCError {
@@ -510,6 +517,13 @@ public class PlayerTeamService {
 		return publicTeam;
 	}
 	
+	private void addSmallAvatar(PlayerTeam team) {
+		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
+		if(avatar != null) {
+			team.setAvatar(avatar);
+		}		
+	}
+	
 	public static class TeamClassification {
 		private String id;
 		private Double score;
@@ -540,6 +554,11 @@ public class PlayerTeamService {
 			this.position = position;
 		}
 		
+	}
+
+	public Object unsubscribeTeamMember(String initiativeId, String nickname) throws HSCError {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
