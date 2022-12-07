@@ -39,7 +39,6 @@ public class AdminController {
 	
 	@PostMapping("/api/admin/initiatives/{initiativeId}/player/subscribe")
 	public ResponseEntity<String> subscribeTeamMember(@PathVariable String initiativeId, @RequestParam String nickname) throws HSCError {
-		//TODO check admin
 		return ResponseEntity.ok(teamService.subscribeTeamMember(initiativeId, nickname));
 	}
 	

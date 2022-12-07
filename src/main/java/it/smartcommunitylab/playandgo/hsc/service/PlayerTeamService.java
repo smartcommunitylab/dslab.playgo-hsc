@@ -470,11 +470,10 @@ public class PlayerTeamService {
 		if (team == null) {
 			throw new NotFoundException("NO_TEAM");
 		}
-		//TODO get playerId instead email
-//		String playerId = securityHelper.getCurrentPreferredUsername();
-//		if(!team.getMembers().stream().anyMatch(m -> m.getPlayerId().equals(playerId))) {
-//			throw new OperationNotPermittedException("NO_TEAM");
-//		}
+		String playerId = securityHelper.getCurrentSubject();
+		if(!team.getMembers().stream().anyMatch(m -> m.getPlayerId().equals(playerId))) {
+			throw new OperationNotPermittedException("NO_TEAM");
+		}
 		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
 		if(avatar != null) {
 			team.setAvatar(avatar);
