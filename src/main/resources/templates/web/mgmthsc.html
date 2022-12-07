@@ -76,19 +76,21 @@
 					    <v-list-item>
 					      <v-list-item-content>
 					        <v-list-item-title class="headline mb-1">
-					        <span v-for="(d, key, index) in team.customData"><b>{{key}}</b>: {{d}}<br></span>
+					        	<span v-for="(d, key, index) in team.customData"><b>{{key}}</b>: {{d}}<br></span>
 					        </v-list-item-title>
                   <v-list-item-subtitle v-if="isAdmin"><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-subtitle>
                   <v-list-item-subtitle><span  th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
 					        <v-list-item-subtitle>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
-					      </v-list-item-content>					
+					      </v-list-item-content>
+								<v-avatar size="125" tile>
+									<v-img v-if="team.avatar" :src="getImageUrlNoCache(team.avatar)"></v-img>
+								</v-avatar>					    
 					    </v-list-item>
-					
 					    <v-card-actions>
                 <v-btn color="primary" text @click="view(team)" th:text="#{teammgmt.btn_view}">View Board</v-btn>
 					      <v-btn v-if="isAdmin && !unauthorized && !loading" color="primary" text @click="editTeam(team)" th:text="#{teammgmt.btn_edit}">Edit</v-btn>
 					      <v-btn v-if="isAdmin && !unauthorized && !loading" color="error" @click="deleteTeam(team)" text th:text="#{teammgmt.btn_delete}">Delete</v-btn>
-					    </v-card-actions>
+					    </v-card-actions>					    
 					  </v-card>
 		      </v-col>
 		    </v-row>
@@ -117,13 +119,17 @@
               <v-col cols="12">
                 <v-text-field :rules="fieldRules" v-model="currTeam.customData['cls']" :label="F_CLASS_LABEL+'*'" required></v-text-field>
               </v-col>
+
+              <v-col cols="12">
+	              <v-file-input v-model="avatar" label="Avatar" required></v-file-input>
+              </v-col>
               
               <v-col cols="12">
                 <v-text-field :rules="fieldRules" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" required></v-text-field>
               </v-col>
               <v-col cols="12">
               <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :error-messages="!teamValid ? teamSizeError : null" 
-              	:items="teamCandidates" item-text="nickname" item-disabled="disabled"
+              	:items="teamCandidates" item-text="nickname" item-disabled="disabled" hide-no-data
               	chips deletable-chips label="Team Members" th:attr="label=#{teammgmt.lbl_members}" return-object multiple>
               </v-autocomplete>
               </v-col>
@@ -209,7 +215,9 @@
     		  currTeam: {members: [], customData: {}},
     		  initiative: INITIATIVE,
     		  isAdmin: false,
-    		  searchInput: null
+    		  searchInput: null,
+    		  timerId: null,
+    		  avatar: null
     	  }
       },
       created() {
@@ -233,23 +241,33 @@
       },
       methods: {
     	  getCandidates: function(val) {
-           axios.get(`../../../api/initiatives/${INITIATIVE.initiativeId}/team/candidates?size=1000&txt=${!!val ? val :''}`, conf).then((data) => {
-        	   // disabled if subscribed by another team
-             var remote = data.data.content.map(c => {
-							c.disabled = c.subscribed && (!this.currTeam || this.currTeam.members.some(m => m.nickname == c.nickname));
-							return c;
-						 });
-             if (this.currTeam && this.currTeam.members) {
-            	 // append also current members to appear as chips
-            	 this.currTeam.members.forEach(m => {
-            		  if (!remote.some(c => c.nickname == m.nickname)) {
-										m.disabled = m.subscribed;
-            			  remote.push(m);
-            		  }
-           	   });            	 
-             }
-             this.teamCandidates = remote;
-           });                             		  
+    		  const process = (remote) => {
+                  if (this.currTeam && this.currTeam.members) {
+                    // append also current members to appear as chips
+                    this.currTeam.members.forEach(m => {
+                       if (!remote.some(c => c.nickname == m.nickname)) {
+                         m.disabled = m.subscribed;
+                         remote.push(m);
+                       }
+                    });               
+                  }
+                  this.teamCandidates = remote;   			  
+    		  };
+    		  if (val && val.length > 2) {
+             clearTimeout(this.timerId);
+             this.timerId = setTimeout(() => {
+               axios.get(`../../../api/initiatives/${INITIATIVE.initiativeId}/team/candidates?size=50&txt=${!!val ? val :''}`, conf).then((data) => {
+                  var remote = data.data.content.map(c => {
+                    c.disabled = c.subscribed && (!this.currTeam || this.currTeam.members.some(m => m.nickname == c.nickname));
+                    return c;
+                  });
+                  // disabled if subscribed by another team
+                  process(remote);
+                });
+             }, 200);
+    		  } else {
+    			  process([]);
+    		  }
     	  },
     	  logout() {
     		      console.log('logout');
@@ -271,6 +289,10 @@
                   this.loading = false;                                   
             });    		  
     	  },
+    	  getImageUrlNoCache(avatar) {
+					var d = new Date(); 
+					return avatar.url + '?ver=' + d.getTime();
+				},
     	  getTeamMemberList(team) {
 					var list = '';
 					team.members.forEach(tm => {
@@ -310,7 +332,21 @@
  	        .then((data) => {
 	            this.createDialogConfirm = false;                  
  	            this.dialog = false;
- 	            this.load();
+ 	            if (this.avatar) {
+ 	            	let formData = new FormData();
+	              formData.append("data", this.avatar);
+ 	            	axios.post(`../../../api/team/${data.data.id}/avatar`, formData, conf)
+ 	            	.then((res) => {
+ 	            		this.load();
+ 	            	})
+ 	            	.catch(e => {
+			              this.loading = false;
+			              this.errorDialog = true;
+			              this.createDialogConfirm = false;                  
+			          });
+ 	            } else  {
+ 	            	this.load();
+ 	            }
           })
           .catch(e => {
               this.loading = false;

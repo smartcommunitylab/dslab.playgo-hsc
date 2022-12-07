@@ -129,6 +129,9 @@ public class TeamStatsService {
     			result.setMin(cp.getValue());
     		}
     	}
+    	if(list.size() == 0) {
+    		result.setMin(0.0);
+    	}
     	return result;
     }
     
@@ -150,6 +153,9 @@ public class TeamStatsService {
     			result.setMin(cp.getValue());
     		}
     	}
+    	if(list.size() == 0) {
+    		result.setMin(0.0);
+    	}    	
     	return result;
 	}
 	
