@@ -37,6 +37,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -153,6 +154,17 @@ public class PlayerTeamService {
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
 			throw new NotFoundException("NO_INITIATIVE");
+		}
+		
+		List<PlayerTeam> list = teamRepo.findByNickname((String)team.getCustomData().get(KEY_NAME));
+		if(list.size() > 0) {
+			if(StringUtils.hasText(team.getId())) {
+				if((list.size() > 1) || (!list.get(0).getId().equals(team.getId()))) {
+					throw new DataException("NAME");
+				}
+			} else {
+				throw new DataException("NAME");
+			}			
 		}
 
 		List<Initiative> userInitiatives = getInitativesForManager();
@@ -470,11 +482,10 @@ public class PlayerTeamService {
 		if (team == null) {
 			throw new NotFoundException("NO_TEAM");
 		}
-		//TODO get playerId instead email
-//		String playerId = securityHelper.getCurrentPreferredUsername();
-//		if(!team.getMembers().stream().anyMatch(m -> m.getPlayerId().equals(playerId))) {
-//			throw new OperationNotPermittedException("NO_TEAM");
-//		}
+		String playerId = securityHelper.getCurrentSubject();
+		if(!team.getMembers().stream().anyMatch(m -> m.getPlayerId().equals(playerId))) {
+			throw new OperationNotPermittedException("NO_TEAM");
+		}
 		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
 		if(avatar != null) {
 			team.setAvatar(avatar);
