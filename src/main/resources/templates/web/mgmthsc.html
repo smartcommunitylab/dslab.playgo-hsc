@@ -108,7 +108,7 @@
           <v-container>
             <v-row>
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" required></v-text-field>
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" :maxlength="25" required></v-text-field>
               </v-col>
               <v-col cols="12">
                 <v-text-field :rules="fieldRules" v-model="currTeam.customData['institute']" :label="F_INSTITUTE_LABEL+'*'" required></v-text-field>
