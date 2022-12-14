@@ -16,6 +16,7 @@
 
 package it.smartcommunitylab.playandgo.hsc.domain;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +36,7 @@ public class PlayerTeam {
 	private Set<TeamMember> members;
 	private Integer expected;
 	
-	private Map<String, Object> customData;
+	private Map<String, Object> customData = new HashMap<>();
 	
 	@Transient
 	private Image avatar;
