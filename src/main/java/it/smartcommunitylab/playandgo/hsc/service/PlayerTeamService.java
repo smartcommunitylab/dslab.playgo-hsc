@@ -509,6 +509,7 @@ public class PlayerTeamService {
 		publicTeam.setId(team.getId());
 		publicTeam.setInitiativeId(team.getInitiativeId());
 		publicTeam.setExpected(team.getExpected());
+		publicTeam.setNumMembers(team.getMembers().size());
 		if(team.getCustomData().containsKey(PlayerTeamService.KEY_NAME)) {
 			publicTeam.getCustomData().put(PlayerTeamService.KEY_NAME, team.getCustomData().get(PlayerTeamService.KEY_NAME));
 		}
