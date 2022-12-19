@@ -4,6 +4,7 @@ public class TeamMember {
 	private String playerId;
 	private String nickname;
 	private boolean subscribed = false;
+	private boolean unregistered = false;
 	private Image avatar;
 	
 	public TeamMember() {}
@@ -51,5 +52,13 @@ public class TeamMember {
 
 	public void setAvatar(Image avatar) {
 		this.avatar = avatar;
+	}
+
+	public boolean isUnregistered() {
+		return unregistered;
+	}
+
+	public void setUnregistered(boolean unregistered) {
+		this.unregistered = unregistered;
 	}
 }
