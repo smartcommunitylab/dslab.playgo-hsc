@@ -572,5 +572,29 @@ public class PlayerTeamService {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	public void unregisterPlayer(String initiativeId, String playerId, String nickname) throws HSCError {
+		if(securityHelper.checkAPIRole() || isAdmin(engineService.getUserRoles())) {
+			Initiative initiative = getInitiative(initiativeId);
+			if (initiative == null) {
+				throw new NotFoundException("NO_INITIATIVE");
+			}
+			List<PlayerTeam> list = teamRepo.findByInitiativeId(initiativeId);
+			for(PlayerTeam team : list) {
+				boolean save = false;
+				for(TeamMember tm : team.getMembers()) {
+					if(tm.getPlayerId().equals(playerId)) {
+						tm.setNickname(nickname);
+						tm.setUnregistered(true);
+						save = true;
+					}					
+				}
+				if(save) {
+					teamRepo.save(team);
+				}
+			}
+		}
+		throw new OperationNotEnabledException("UNREGISTER");		
+	}
 
 }

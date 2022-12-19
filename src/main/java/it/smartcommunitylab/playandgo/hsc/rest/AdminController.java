@@ -44,8 +44,14 @@ public class AdminController {
 	
 	@PostMapping("/api/admin/initiatives/{initiativeId}/player/unsubscribe")
 	public ResponseEntity<Void> unsubscribeTeamMember(@PathVariable String initiativeId, @RequestParam String nickname) throws HSCError {
-		//TODO check admin
+		//TODO unsubscribeTeamMember
 		return new ResponseEntity<>(null, HttpStatus.OK);
+	}
+	
+	@PostMapping("/api/admin/initiatives/{initiativeId}/player/unregister")
+	public ResponseEntity<Void> unregisterPlayer(@PathVariable String initiativeId, @RequestParam String playerId, @RequestParam String nickname) throws HSCError {
+		teamService.unregisterPlayer(initiativeId, playerId, nickname);
+		return ResponseEntity.ok(null);
 	}
 
 }
