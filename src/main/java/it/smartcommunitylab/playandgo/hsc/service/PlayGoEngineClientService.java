@@ -159,7 +159,7 @@ public class PlayGoEngineClientService {
 		ParameterizedTypeReference<RestPage<CampaignPlacing>> ref = new ParameterizedTypeReference<RestPage<CampaignPlacing>>() {};
 		return webClient.get()
 				.uri(uri)
-				.attributes(clientRegistrationId("oauthprovider"))
+				.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 				.retrieve()
 				.bodyToMono(ref)
 				.block();
@@ -177,7 +177,7 @@ public class PlayGoEngineClientService {
 		}
 		return webClient.get()
 				.uri(uri)
-				.attributes(clientRegistrationId("oauthprovider"))
+				.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 				.retrieve()
 				.bodyToMono(CampaignPlacing.class)
 				.block();    	
@@ -199,7 +199,7 @@ public class PlayGoEngineClientService {
 		ParameterizedTypeReference<List<TransportStat>> ref = new ParameterizedTypeReference<List<TransportStat>>() {};
 		return webClient.get()
 				.uri(uri)
-				.attributes(clientRegistrationId("oauthprovider"))
+				.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 				.retrieve()
 				.bodyToMono(ref)
 				.block();		
@@ -215,7 +215,7 @@ public class PlayGoEngineClientService {
 		ParameterizedTypeReference<List<TransportStat>> ref = new ParameterizedTypeReference<List<TransportStat>>() {};
 		return webClient.get()
 				.uri(uri)
-				.attributes(clientRegistrationId("oauthprovider"))
+				.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 				.retrieve()
 				.bodyToMono(ref)
 				.block();		    	
@@ -231,7 +231,7 @@ public class PlayGoEngineClientService {
 		ParameterizedTypeReference<List<GameStats>> ref = new ParameterizedTypeReference<List<GameStats>>() {};
 		return webClient.get()
 				.uri(uri)
-				.attributes(clientRegistrationId("oauthprovider"))
+				.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 				.retrieve()
 				.bodyToMono(ref)
 				.block();		    	    	
@@ -247,7 +247,7 @@ public class PlayGoEngineClientService {
 		ParameterizedTypeReference<RestPage<CampaignPlacing>> ref = new ParameterizedTypeReference<RestPage<CampaignPlacing>>() {};
 		return webClient.get()
 				.uri(uri)
-				.attributes(clientRegistrationId("oauthprovider"))
+				.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 				.retrieve()
 				.bodyToMono(ref)
 				.block();
@@ -262,7 +262,7 @@ public class PlayGoEngineClientService {
 		}
 		return webClient.get()
 				.uri(uri)
-				.attributes(clientRegistrationId("oauthprovider"))
+				.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 				.retrieve()
 				.bodyToMono(CampaignPlacing.class)
 				.block();    	    	
