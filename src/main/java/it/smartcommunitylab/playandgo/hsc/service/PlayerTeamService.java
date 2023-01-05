@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -55,6 +56,7 @@ import it.smartcommunitylab.playandgo.hsc.error.HSCError;
 import it.smartcommunitylab.playandgo.hsc.error.NotFoundException;
 import it.smartcommunitylab.playandgo.hsc.error.OperationNotEnabledException;
 import it.smartcommunitylab.playandgo.hsc.error.OperationNotPermittedException;
+import it.smartcommunitylab.playandgo.hsc.ge.GamificationEngineService;
 import it.smartcommunitylab.playandgo.hsc.repository.InitiativeRepository;
 import it.smartcommunitylab.playandgo.hsc.repository.PlayerTeamRepository;
 import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
@@ -84,6 +86,9 @@ public class PlayerTeamService {
 	
 	@Autowired
 	private AvatarService avatarService;
+	
+	@Autowired
+	private GamificationEngineService gamificationEngineService;
 	
 	@Autowired
 	private SecurityHelper securityHelper;
@@ -123,7 +128,6 @@ public class PlayerTeamService {
 		if (territories != null) return initiativeRepo.findByTerritories(territories);
 		List<String> campaigns = getCampaigns(roles);
 		if (campaigns != null) return initiativeRepo.findByCampaignIds(territories);
-
 		return Collections.emptyList();
 	}
 
@@ -195,16 +199,23 @@ public class PlayerTeamService {
 			if (!isManager && !Boolean.TRUE.equals(initiative.getCanCreate())) {
 				throw new OperationNotEnabledException("CREATE");
 			}
+			team.setId(UUID.randomUUID().toString());
 			team.setOwner(currentUser);
+			if(!gamificationEngineService.createPlayer(team.getId(), initiative.getCampaign().getGameId(), true)) {
+				throw new DataException("GAMIFICATION-TEAM");
+			}
+			//TODO add player to engineService
 		}
 		validate(team, initiative);
 		for(TeamMember tm : toAdd) {
 			tm.setSubscribed(false);
 		}
-		team = teamRepo.save(team);
 		// remove not used
 		for (TeamMember tm : toRemove) {
 			if(tm.isSubscribed()) {
+				if(!gamificationEngineService.removePlayerToGroup(tm.getPlayerId(), team.getId(), initiative.getCampaign().getGameId())) {
+					throw new DataException("GAMIFICATION-PLAYER");
+				}						
 				try {
 					engineService.unsubscribe(initiative.getInitiativeId(), tm.getNickname());
 				} catch (Exception e1) {
@@ -212,6 +223,7 @@ public class PlayerTeamService {
 				}				
 			}
 		}
+		team = teamRepo.save(team);
 		return team;
 	}
 	
@@ -433,8 +445,14 @@ public class PlayerTeamService {
 				for(TeamMember tm : team.getMembers()) {
 					if(tm.getNickname().equals(nickname)) {
 						if(tm.isSubscribed()) {
-							throw new NotFoundException("PLAYER_ALREADY_SUBSCRIBED");
+							throw new DataException("PLAYER_ALREADY_SUBSCRIBED");
 						}
+						if(!gamificationEngineService.createPlayer(tm.getPlayerId(), initiative.getCampaign().getGameId(), false)) {
+							throw new DataException("GAMIFICATION-PLAYER");
+						}
+						if(!gamificationEngineService.addPlayerToGroup(tm.getPlayerId(), team.getId(), initiative.getCampaign().getGameId())) {
+							throw new DataException("GAMIFICATION-PLAYER-TEAM");
+						}												
 						tm.setSubscribed(true);
 						teamRepo.save(team);
 						return team.getId(); 
