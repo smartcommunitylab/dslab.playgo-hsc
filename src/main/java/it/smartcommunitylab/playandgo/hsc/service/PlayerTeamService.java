@@ -204,7 +204,7 @@ public class PlayerTeamService {
 			if(!gamificationEngineService.createPlayer(team.getId(), initiative.getCampaign().getGameId(), true)) {
 				throw new DataException("GAMIFICATION-TEAM");
 			}
-			//TODO add player to engineService
+			engineService.addGroup(team.getId(), initiative.getCampaign().getGameId());
 		}
 		validate(team, initiative);
 		for(TeamMember tm : toAdd) {
@@ -256,7 +256,7 @@ public class PlayerTeamService {
 		if(!gamificationEngineService.deleteGroup(existing.getId(), initiative.getCampaign().getGameId())) {
 			throw new DataException("GAMIFICATION-TEAM");
 		}
-		//TODO delete player to engineService
+		engineService.deleteGroup(teamId);
 		
 		toRemove = new HashSet<>(existing.getMembers());
 		// remove not used
