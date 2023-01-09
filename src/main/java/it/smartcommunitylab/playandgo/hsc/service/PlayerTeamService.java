@@ -252,6 +252,12 @@ public class PlayerTeamService {
 		if (!isManager && !Boolean.TRUE.equals(initiative.getCanEdit())) {
 			throw new OperationNotEnabledException("EDIT");
 		}
+		
+		if(!gamificationEngineService.deleteGroup(existing.getId(), initiative.getCampaign().getGameId())) {
+			throw new DataException("GAMIFICATION-TEAM");
+		}
+		//TODO delete player to engineService
+		
 		toRemove = new HashSet<>(existing.getMembers());
 		// remove not used
 		for (TeamMember tm: toRemove) {

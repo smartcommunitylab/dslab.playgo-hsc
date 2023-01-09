@@ -80,7 +80,7 @@ public class GamificationEngineService {
 				return true;
 			}
 		} catch (Exception e) {
-			logger.error(String.format("createPlayer error: %s - %s - %s", gameId, playerId, e.getMessage()));
+			logger.error(String.format("addPlayerToGroup error: %s - %s - %s", gameId, playerId, e.getMessage()));
 		}
 		return false;		
 	}
@@ -95,7 +95,21 @@ public class GamificationEngineService {
 				return true;
 			}
 		} catch (Exception e) {
-			logger.error(String.format("createPlayer error: %s - %s - %s", gameId, playerId, e.getMessage()));
+			logger.error(String.format("removePlayerToGroup error: %s - %s - %s", gameId, playerId, e.getMessage()));
+		}
+		return false;		
+	}
+
+	public boolean deleteGroup(String groupId, String gameId) {
+		try {
+			String url = gamificationUrl + "/data/game/" + gameId + "/team/" + URLEncoder.encode(groupId, "UTF-8"); 
+			ResponseEntity<String> entity = HTTPConnector.doBasicAuthenticationMethod(url, null, "application/json", 
+					"application/json", gamificationUser, gamificationPassword, HttpMethod.DELETE);
+			if (entity.getStatusCode().is2xxSuccessful()) {
+				return true;
+			}
+		} catch (Exception e) {
+			logger.error(String.format("deleteGroup error: %s - %s", gameId, e.getMessage()));
 		}
 		return false;		
 	}
