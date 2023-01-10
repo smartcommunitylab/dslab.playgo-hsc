@@ -204,7 +204,7 @@ public class PlayerTeamService {
 			if(!gamificationEngineService.createPlayer(team.getId(), initiative.getCampaign().getGameId(), true)) {
 				throw new DataException("GAMIFICATION-TEAM");
 			}
-			engineService.addGroup(team.getId(), initiative.getCampaign().getGameId());
+			engineService.addGroup(team.getId(), initiative.getInitiativeId());
 		}
 		validate(team, initiative);
 		for(TeamMember tm : toAdd) {
