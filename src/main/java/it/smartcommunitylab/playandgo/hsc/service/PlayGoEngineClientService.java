@@ -97,7 +97,6 @@ public class PlayGoEngineClientService {
 		return 
 		webClient.get()
 		.uri(uri)
-//		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(ref)
@@ -109,7 +108,6 @@ public class PlayGoEngineClientService {
 		return 
 		webClient.get()
 		.uri("/api/ext/territory/players?territory="+territory + "&size=" + pageRequest.getPageSize() + "&txt="+(txt == null ? "" : txt.trim()))
-//		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(ref)
@@ -237,8 +235,8 @@ public class PlayGoEngineClientService {
 				.block();		    	    	
     }
 
-	public RestPage<CampaignPlacing> getCampaignPlacingByGame(String campaignId,  
-			String dateFrom, String dateTo, boolean groupByGroupId, Pageable pageRequest) {
+	public RestPage<CampaignPlacing> getCampaignPlacingByGame(String campaignId, String dateFrom, String dateTo, 
+			boolean groupByGroupId, Pageable pageRequest) {
 		String uri = "/api/report/campaign/placing/game?campaignId=" + campaignId + "&groupByGroupId=" + groupByGroupId;
 		if(StringUtils.hasText(dateFrom) && StringUtils.hasText(dateTo)) {
 			uri = uri + "&dateFrom=" + dateFrom + "&dateTo=" + dateTo;
@@ -266,6 +264,25 @@ public class PlayGoEngineClientService {
 				.retrieve()
 				.bodyToMono(CampaignPlacing.class)
 				.block();    	    	
+    }
+    
+    public PlayerInfo addGroup(String groupId, String campaignId) {
+		return webClient.post()
+		.uri("/api/ext/player/hsc?campaignId="+campaignId+"&playerId="+groupId)
+		.contentType(MediaType.APPLICATION_JSON)
+		.attributes(clientRegistrationId("oauthprovider"))
+		.retrieve()
+		.bodyToMono(PlayerInfo.class)
+		.block();    	
+    }
+    
+    public void deleteGroup(String groupId) {
+    	webClient.delete()
+    	.uri("/api/ext/player/hsc?playerId="+groupId)
+		.attributes(clientRegistrationId("oauthprovider"))
+		.retrieve()
+		.bodyToMono(Map.class)
+		.block();
     }
 
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"pageable"})

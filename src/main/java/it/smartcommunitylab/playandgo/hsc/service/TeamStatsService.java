@@ -140,8 +140,7 @@ public class TeamStatsService {
     	PlacingComparison result = new PlacingComparison();
     	result.setMin(Double.MAX_VALUE);
     	//get campaign placing
-    	List<CampaignPlacing> list = engineService.getCampaignPlacingByGame(campaignId, dateFrom, dateTo, false, 
-    			PageRequest.of(0, 5000)).getContent();
+    	List<CampaignPlacing> list = engineService.getCampaignPlacingByGame(campaignId, dateFrom, dateTo, false, PageRequest.of(0, 5000)).getContent();
     	for(CampaignPlacing cp : list) {
     		if(cp.getPlayerId().equals(playerId)) {
     			result.setValue(cp.getValue());
