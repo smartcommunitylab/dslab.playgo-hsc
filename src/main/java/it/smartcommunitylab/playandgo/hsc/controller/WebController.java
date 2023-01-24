@@ -16,8 +16,6 @@
 
 package it.smartcommunitylab.playandgo.hsc.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -66,10 +64,11 @@ public class WebController {
 	ModelAndView webMgmt(@PathVariable String type, @PathVariable String initiative) {
 		ModelAndView model = new ModelAndView("web/mgmt"+type);
 		Initiative obj = teamService.getInitiative(initiative);
-		model.addObject("initiative", obj);
 		model.addObject("authEndpoint", authUri);
 		model.addObject("clientId", clientId);
-		
+		model.addObject("initiativeId", obj.getInitiativeId());
+		model.addObject("minTeamSize", obj.getMinTeamSize());
+		model.addObject("campaignName", obj.getCampaign().getName());
 		return model;
 	}
 }

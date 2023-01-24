@@ -130,6 +130,43 @@ public class PlayerTeamService {
 		if (campaigns != null) return initiativeRepo.findByCampaignIds(territories);
 		return Collections.emptyList();
 	}
+	
+	public boolean isCampaignManager(String initiativeId) {
+		Initiative initiative = initiativeRepo.findById(initiativeId).orElse(null);
+		if(initiative == null) {
+			return false;
+		}
+		List<UserRole> roles = engineService.getUserRoles();
+		if (isAdmin(roles)) 
+			return true;
+		return roles.stream().anyMatch(r -> {
+			if(r.getRole().equals(UserRole.Role.territory) && r.getEntityId().equals(initiative.getCampaign().getTerritoryId()))
+				return true;
+			if(r.getRole().equals(UserRole.Role.campaign) && r.getEntityId().equals(initiative.getCampaign().getCampaignId()))
+				return true;
+			return false;
+		});
+	}
+	
+	public boolean isTeamManager(String initiativeId, String email) {
+		if(isCampaignManager(initiativeId))
+			return true;
+		Initiative initiative = initiativeRepo.findById(initiativeId).orElse(null);
+		if(initiative == null) {
+			return false;
+		}
+		boolean match = initiative.getTeamLeaderDomainList().stream().anyMatch(r -> {
+			return email.toLowerCase().endsWith(r.toLowerCase());
+		});
+		if(match)
+			return true;
+		match = initiative.getTeamLeaderList().stream().anyMatch(r -> {
+			return email.toLowerCase().equals(r.toLowerCase());
+		});
+		if(match)
+			return true;
+		return false;
+	}
 
 	public Page<PlayerInfo> searchPlayers(String initiativeId, String txt, Pageable pageRequest) {
 		Initiative initiative = getInitiative(initiativeId);
@@ -154,7 +191,11 @@ public class PlayerTeamService {
 	}
 	
 	public PlayerTeam saveTeam(String initiativeId, PlayerTeam team) throws HSCError {
+		team.setInitiativeId(initiativeId);
 		String currentUser = securityHelper.getCurrentPreferredUsername();
+		if(!isTeamManager(initiativeId, currentUser)) {
+			throw new OperationNotPermittedException("TEAM");
+		}
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
 			throw new NotFoundException("NO_INITIATIVE");
@@ -289,6 +330,12 @@ public class PlayerTeamService {
 		}
 	}
 
+	public Initiative getInitiativeWeb(String initiativeId) {
+		if(isCampaignManager(initiativeId))
+			return initiativeRepo.findById(initiativeId).orElse(null);
+		return null;
+	}
+	
 	public Initiative getInitiative(String initiativeId) {
 		return initiativeRepo.findById(initiativeId).orElse(null);
 	}
@@ -313,16 +360,22 @@ public class PlayerTeamService {
 	 * @param initiative
 	 * @return
 	 */
-	public Initiative saveInitiative(String initiativeId, Initiative initiative) {
+	public Initiative saveInitiative(String initiativeId, Initiative initiative) throws HSCError {
+		if(!isCampaignManager(initiativeId)) {
+			throw new OperationNotPermittedException("CAMPAIGN");
+		}
 		Initiative old = initiativeRepo.findById(initiativeId).orElse(null);
 		if (old != null) {
-			old.setBonus(initiative.getBonus());
-			old.setBonusThreshold(initiative.getBonusThreshold());
+			//old.setBonus(initiative.getBonus());
+			//old.setBonusThreshold(initiative.getBonusThreshold());
 			old.setMinTeamSize(initiative.getMinTeamSize());
+			old.setTeamLeaderDomainList(initiative.getTeamLeaderDomainList());
+			old.setTeamLeaderList(initiative.getTeamLeaderList());
 			return initiativeRepo.save(old);
 		}
 		return null;
 	}
+	
 	public List<PlayerTeam> getUserTeamsForInitiative(String initiativeId) {
 		List<PlayerTeam> result = new ArrayList<>();
 		List<Initiative> initiatives = getInitativesForManager();

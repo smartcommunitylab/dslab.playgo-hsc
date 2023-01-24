@@ -17,6 +17,9 @@
       MIN_TEAM_SIZE_LABEL = [[#{initiativelist.min_team_size_label}]];
       BONUS_THRESHOLD_LABEL =[[#{initiativelist.bonus_threshold_label}]];
       BONUS_LABEL =[[#{initiativelist.bonus_label}]];
+      TEAM_LEADER_LABEL = [[#{initiativelist.teamLeaderList}]];
+      TEAM_LEADER_DOMAIN_LABEL = [[#{initiativelist.teamLeaderDomainList}]];
+      EMAIL_ERROR = [[#{initiativelist.error_email}]];
       /*]]>*/
     </script>
     
@@ -111,14 +114,38 @@
         <v-card-text>
           <v-container v-if="initiative">
             <v-row>
-              <v-col cols="12">
+              <!-- <v-col cols="12">
                 <v-text-field :rules="fieldRules" type="number" v-model="initiative.bonus" :persistent-hint="true" :label="BONUS_LABEL" required></v-text-field>
               </v-col>
               <v-col cols="12">
                 <v-text-field :rules="fieldRules" type="number" v-model="initiative.bonusThreshold" :persistent-hint="true" :label="BONUS_THRESHOLD_LABEL" required></v-text-field>
-              </v-col>              
+              </v-col> -->              
               <v-col cols="12">
                 <v-text-field :rules="fieldRules" type="number" v-model="initiative.minTeamSize" :persistent-hint="true" :label="MIN_TEAM_SIZE_LABEL" required></v-text-field>
+              </v-col>
+              <v-col cols="12">
+              	<span th:text="#{initiativelist.teamLeaderList}"></span>
+              	<v-chip-group>
+              		<v-chip v-for="item in initiative.teamLeaderList" @click:close="removeTeamLeader(item)" :close="true">
+              			{{item}}
+              		</v-chip>
+              	</v-chip-group>
+              </v-col>
+              <v-col cols="12">
+              	<v-text-field :persistent-hint="true" :label="TEAM_LEADER_LABEL" :rules="[rules.email]"
+              		v-model="teamLeader" @keydown.enter.prevent="enterTeamLeader()"></v-text-field>
+              </v-col>
+              <v-col cols="12">
+              	<span th:text="#{initiativelist.teamLeaderDomainList}"></span>
+              	<v-chip-group>
+              		<v-chip v-for="item in initiative.teamLeaderDomainList" @click:close="removeTeamLeaderDomain(item)" :close="true">
+              			{{item}}
+              		</v-chip>
+              	</v-chip-group>
+              </v-col>
+              <v-col cols="12">
+              	<v-text-field :persistent-hint="true" :label="TEAM_LEADER_DOMAIN_LABEL" :rules="[rules.domain]"
+              		v-model="teamLeaderDomain" @keydown.enter.prevent="enterTeamLeaderDomain()"></v-text-field>
               </v-col>
             </v-row>
             
@@ -155,7 +182,19 @@
           fieldRules: [
                 v => !!v || FIELD_REQUIRED
           ],
-
+          rules: {
+						required: value => !!value || FIELD_REQUIRED,
+						email: value => {
+            	const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            	return pattern.test(value) || EMAIL_ERROR
+         	  },
+         	  domain: value => {
+            	const pattern = /^@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            	return pattern.test(value) || EMAIL_ERROR	
+						}
+         	},
+					teamLeader: null,
+					teamLeaderDomain: null
     	  }
       },
       created() {
@@ -211,7 +250,23 @@
          },
          dateFormat(ts) {
         	 return luxon.DateTime.fromMillis(ts).toFormat('dd/LL/yyyy');
-         }
+         },
+				removeTeamLeader(item) {
+					let idx = this.initiative.teamLeaderList.indexOf(item);
+    			this.initiative.teamLeaderList.splice(idx, 1);
+				},
+				enterTeamLeader() {
+					this.initiative.teamLeaderList.push(this.teamLeader);
+					this.teamLeader = null;
+				},
+				removeTeamLeaderDomain(item) {
+					let idx = this.initiative.teamLeaderDomainList.indexOf(item);
+    			this.initiative.teamLeaderDomainList.splice(idx, 1);
+				},
+				enterTeamLeaderDomain() {
+					this.initiative.teamLeaderDomainList.push(this.teamLeaderDomain);
+					this.teamLeaderDomain = null;
+				}				         
       }
     })
   </script>

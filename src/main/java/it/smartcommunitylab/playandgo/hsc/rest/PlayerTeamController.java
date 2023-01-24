@@ -69,7 +69,7 @@ public class PlayerTeamController {
 	
 	@GetMapping("/api/initiatives/{initiativeId}/model")
 	public ResponseEntity<Initiative> getInitative(@PathVariable String initiativeId) {
-		return ResponseEntity.ok(teamService.getInitiative(initiativeId));
+		return ResponseEntity.ok(teamService.getInitiativeWeb(initiativeId));
 	}
 
 	@GetMapping("/api/initiatives/{initiativeId}/admin")

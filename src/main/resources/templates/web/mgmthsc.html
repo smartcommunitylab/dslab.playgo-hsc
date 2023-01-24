@@ -15,7 +15,9 @@
     /*<![CDATA[*/
       AUTH_ENDPOINT = [[${authEndpoint}]] ;
       CLIENT_ID = [[${clientId}]];
-      INITIATIVE = [[${initiative}]];
+      INITIATIVE_ID = [[${initiativeId}]];
+      MIN_TEAM_SIZE = [[${minTeamSize}]];
+      CAMPAIGN_NAME = [[${campaignName}]];
       FIELD_REQUIRED = [[#{teammgmt.error_required}]];
       TEAM_SIZE_LABEL = [[#{teammgmt.hsc.team_size_label}]];
       TEAM_SIZE_ERROR = [[#{teammgmt.hsc.team_size_error}]];
@@ -55,7 +57,7 @@
       <v-btn icon>
         <v-icon @click="back()">mdi-chevron-left</v-icon>
       </v-btn>
-      <v-toolbar-title><span  th:text="#{teammgmt.title}">Team Management</span> - {{initiative.campaign.name.it}}</v-toolbar-title>
+      <v-toolbar-title><span  th:text="#{teammgmt.title}">Team Management</span> - {{campaignName.it}}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn icon>
         <v-icon @click="logout()">mdi-logout</v-icon>
@@ -213,7 +215,9 @@
     		  candidates: [],
     		  teamCandidates: [],
     		  currTeam: {members: [], customData: {}},
-    		  initiative: INITIATIVE,
+    		  initiativeId: INITIATIVE_ID,
+    		  minTeamSize: MIN_TEAM_SIZE,
+    		  campaignName: CAMPAIGN_NAME,
     		  isAdmin: false,
     		  searchInput: null,
     		  timerId: null,
@@ -227,11 +231,11 @@
       computed: {
     	  teamValid() {
     		  return !this.currTeam || !this.currTeam.members ||
-    		    this.currTeam.members.length >= Math.min(this.initiative.minTeamSize / 2, (this.currTeam.expected || 1000) / 2) 
+    		    this.currTeam.members.length >= Math.min(this.minTeamSize / 2, (this.currTeam.expected || 1000) / 2) 
     		    && this.currTeam.members.length <= this.currTeam.expected
     	  },
     	  teamSizeError() {
-    		  return TEAM_SIZE_ERROR.replace(/\{1\}/g, this.initiative.minTeamSize).replace(/\{0\}/g, Math.floor(this.initiative.minTeamSize/2)).split('\n'); 
+    		  return TEAM_SIZE_ERROR.replace(/\{1\}/g, this.minTeamSize).replace(/\{0\}/g, Math.floor(this.minTeamSize/2)).split('\n'); 
     	  }
       },
       watch: {
@@ -256,7 +260,7 @@
     		  if (val && val.length > 2) {
              clearTimeout(this.timerId);
              this.timerId = setTimeout(() => {
-               axios.get(`../../../api/initiatives/${INITIATIVE.initiativeId}/team/candidates?size=50&txt=${!!val ? val :''}`, conf).then((data) => {
+               axios.get(`../../../api/initiatives/${this.initiativeId}/team/candidates?size=50&txt=${!!val ? val :''}`, conf).then((data) => {
                   var remote = data.data.content.map(c => {
                     c.disabled = c.subscribed && (!this.currTeam || this.currTeam.members.some(m => m.nickname == c.nickname));
                     return c;
@@ -277,9 +281,9 @@
     	  },
     	  load() {
     		    this.loading = true;
-	          axios.get(`../../../api/initiatives/${INITIATIVE.initiativeId}/admin`, conf).then((admin) => {
+	          axios.get(`../../../api/initiatives/${this.initiativeId}/admin`, conf).then((admin) => {
 	        	    this.isAdmin = admin.data;
-	              axios.get(`../../../api/initiatives/${INITIATIVE.initiativeId}/teams`, conf).then((data) => {
+	              axios.get(`../../../api/initiatives/${this.initiativeId}/teams`, conf).then((data) => {
 	                  this.teams = data.data;
                     this.loading = false;                 
 	              })
@@ -328,7 +332,7 @@
     		  
     		  var copy = Object.assign({}, this.currTeam);
           this.loading = true;
- 	        axios.post(`../../../api/initiatives/${INITIATIVE.initiativeId}/team`, copy, conf)
+ 	        axios.post(`../../../api/initiatives/${this.initiativeId}/team`, copy, conf)
  	        .then((data) => {
 	            this.createDialogConfirm = false;                  
  	            this.dialog = false;
@@ -355,14 +359,14 @@
           });
     	  },
     	  view(team) {
-    		  window.open(`../../../web/hsc/${INITIATIVE.initiativeId}`, '_blank');
+    		  window.open(`../../../web/hsc/${this.initiativeId}`, '_blank');
     	  },
     	  deleteTeam(team) {
     		  this.currTeam = team;
     		  this.deleteDialog = true;    		 
     	  },
     	  confirmDelete() {
-              axios.delete(`../../../api/initiatives/${INITIATIVE.initiativeId}/team/${this.currTeam.id}`, conf).then((data) => {
+              axios.delete(`../../../api/initiatives/${this.initiativeId}/team/${this.currTeam.id}`, conf).then((data) => {
                   this.deleteDialog = false;
                   this.load();
               });

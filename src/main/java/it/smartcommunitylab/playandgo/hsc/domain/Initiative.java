@@ -16,6 +16,9 @@
 
 package it.smartcommunitylab.playandgo.hsc.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 
 /**
@@ -36,6 +39,9 @@ public class Initiative {
 	private Double bonus;
 	private Double bonusThreshold;
 	private Integer minTeamSize;
+	
+	private List<String> teamLeaderDomainList = new ArrayList<>();
+	private List<String> teamLeaderList = new ArrayList<>();
 	
 	public String getInitiativeId() {
 		return initiativeId;
@@ -84,5 +90,17 @@ public class Initiative {
 	}
 	public void setType(String type) {
 		this.type = type;
+	}
+	public List<String> getTeamLeaderDomainList() {
+		return teamLeaderDomainList;
+	}
+	public void setTeamLeaderDomainList(List<String> teamLeaderDomainList) {
+		this.teamLeaderDomainList = teamLeaderDomainList;
+	}
+	public List<String> getTeamLeaderList() {
+		return teamLeaderList;
+	}
+	public void setTeamLeaderList(List<String> teamLeaderList) {
+		this.teamLeaderList = teamLeaderList;
 	}
 }
