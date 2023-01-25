@@ -140,7 +140,7 @@ public class PlayerTeamController {
 			@PathVariable String teamId,
 			@RequestParam("data") MultipartFile data,
 			HttpServletRequest request) throws HSCError {
-		return avatarService.uploadTeamAvatar(teamId, data);
+		return teamService.uploadTeamAvatar(teamId, data);
 	}
 	
 	@GetMapping("/api/team/{teamId}/avatar")

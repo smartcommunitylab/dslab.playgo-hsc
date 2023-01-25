@@ -22,9 +22,7 @@
       TEAM_SIZE_LABEL = [[#{teammgmt.hsc.team_size_label}]];
       TEAM_SIZE_ERROR = [[#{teammgmt.hsc.team_size_error}]];
       F_NAME_LABEL = [[#{teamboard.hsc.name}]];
-      F_INSTITUTE_LABEL = [[#{teamboard.hsc.institute}]];
-      F_SCHOOL_LABEL = [[#{teamboard.hsc.school}]];
-      F_CLASS_LABEL = [[#{teamboard.hsc.cls}]];
+      F_DESC_LABEL = [[#{teamboard.hsc.desc}]];
       /*]]>*/
     </script>
     
@@ -78,11 +76,12 @@
 					    <v-list-item>
 					      <v-list-item-content>
 					        <v-list-item-title class="headline mb-1">
-					        	<span v-for="(d, key, index) in team.customData"><b>{{key}}</b>: {{d}}<br></span>
+					        	<span><strong>{{F_NAME_LABEL}}</strong>: {{team.customData['name']}}</span><br>
+					        	<span><strong>{{F_DESC_LABEL}}</strong>: {{team.customData['desc']}}</span><br>
 					        </v-list-item-title>
-                  <v-list-item-subtitle v-if="isAdmin"><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-subtitle>
-                  <v-list-item-subtitle><span  th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
-					        <v-list-item-subtitle>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
+                  <v-list-item-title v-if="isAdmin"><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-title>
+                  <v-list-item-title><span  th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
+					        <v-list-item-title>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
 					      </v-list-item-content>
 								<v-avatar size="125" tile>
 									<v-img v-if="team.avatar" :src="getImageUrlNoCache(team.avatar)"></v-img>
@@ -113,13 +112,7 @@
                 <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" :maxlength="25" required></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['institute']" :label="F_INSTITUTE_LABEL+'*'" required></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['school']" :label="F_SCHOOL_LABEL+'*'" required></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['cls']" :label="F_CLASS_LABEL+'*'" required></v-text-field>
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['desc']" :label="F_DESC_LABEL+'*'" required></v-text-field>
               </v-col>
 
               <v-col cols="12">
@@ -205,9 +198,7 @@
     		  unauthorized: false,
     		  TEAM_SIZE_LABEL: TEAM_SIZE_LABEL,
     		  F_NAME_LABEL: F_NAME_LABEL,
-          F_INSTITUTE_LABEL: F_INSTITUTE_LABEL,
-          F_SCHOOL_LABEL: F_SCHOOL_LABEL,
-          F_CLASS_LABEL: F_CLASS_LABEL,
+    		  F_DESC_LABEL,
     		  fieldRules: [
     		        v => !!v || FIELD_REQUIRED
     		  ],
