@@ -151,6 +151,10 @@ public class PlayerTeamService {
 	public boolean isTeamManager(String initiativeId) {
 		String email = securityHelper.getCurrentPreferredUsername();
 		Initiative initiative = initiativeRepo.findById(initiativeId).orElse(null);
+		return isTeamManager(initiative, email);
+	}
+	
+	public boolean isTeamManager(Initiative initiative, String email) {
 		if(initiative == null) {
 			return false;
 		}
@@ -164,7 +168,21 @@ public class PlayerTeamService {
 		});
 		if(match)
 			return true;
-		return false;
+		return false;		
+	}
+	
+	public List<Initiative> getTeamLeaderInitiatives() {
+		String email = securityHelper.getCurrentPreferredUsername();
+		List<Initiative> list = initiativeRepo.findAll();
+		List<Initiative> result = list.stream().filter(i -> isTeamManager(i, email)).collect(Collectors.toList());
+		return result;
+	}
+	
+	public List<PlayerTeam> getPlayerTeamByOwner() {
+		String email = securityHelper.getCurrentPreferredUsername();
+		List<PlayerTeam> result = teamRepo.findByOwner(email);
+		result.forEach(t -> addSmallAvatar(t));
+		return result;
 	}
 	
 	public boolean isMyTeam(String teamId) {

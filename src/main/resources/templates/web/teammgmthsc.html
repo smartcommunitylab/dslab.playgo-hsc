@@ -1,0 +1,424 @@
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.thymeleaf.org"
+	th:with="lang=${#locale.language}" th:lang="${lang}">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Viaggia Play&amp;Go</title>
+
+
+<!-- required libraries -->
+<script src="../../lib/axios.min.js"></script>
+<script type="text/javascript" th:inline="javascript">
+    /*<![CDATA[*/
+      AUTH_ENDPOINT = [[${authEndpoint}]] ;
+      CLIENT_ID = [[${clientId}]];
+      FIELD_REQUIRED = [[#{teammgmt.error_required}]];
+      TEAM_SIZE_LABEL = [[#{teammgmt.hsc.team_size_label}]];
+      TEAM_SIZE_ERROR = [[#{teammgmt.hsc.team_size_error}]];
+      F_NAME_LABEL = [[#{teamboard.hsc.name}]];
+      F_DESC_LABEL = [[#{teamboard.hsc.desc}]];
+      /*]]>*/
+    </script>
+    
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet"/>
+  
+  <link href="../../lib/vuetify.min.css" rel="stylesheet"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"/>
+    
+    <script type="text/javascript" th:inline="javascript">
+    /*<![CDATA[*/
+        var token = sessionStorage.getItem('access_token');
+        expiresIn = sessionStorage.getItem('access_token_expires_in') || 0;
+        if (!token || expiresIn < new Date().getTime()) {
+          var redirect = window.location.href;
+          redirect = redirect.substr(0,redirect.indexOf('/web/')+4);
+          window.location.href = AUTH_ENDPOINT + '?response_type=token&client_id='+CLIENT_ID+'&redirect_uri=' + redirect;
+          delete sessionStorage.access_token;
+          delete sessionStorage.access_token_expires_in;
+        }
+      /*]]>*/
+    </script>    
+</head>
+
+<body>
+
+<div id="app">
+  <v-app> 
+    <v-app-bar app >
+      <v-toolbar-title><span  th:text="#{teammgmt.title}">Team Management</span></v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn icon>
+        <v-icon @click="logout()">mdi-logout</v-icon>
+      </v-btn>
+      <v-progress-linear :active="loading" :indeterminate="loading"  absolute bottom></v-progress-linear>
+	  </v-app-bar> 
+    <v-content> 
+        <v-btn class="mx-2" fab dark large color="primary" bottom right fixed @click="createNew()"  v-if="!unauthorized && !loading">
+        <v-icon dark>mdi-plus</v-icon>
+      </v-btn>
+ 		  <v-container>
+		    <h1 v-if="teams != null && teams.length == 0" class="text-center" th:text="#{teammgmt.noteams}">No teams defined. Create a new one.</h1>
+        <h1 color="error" v-if="!!unauthorized" class="text-center" th:text="#{teammgmt.noaccess}">You are not authorized to access this page. <v-btn color="error" @click="logout()" th:text="#{teammgmt.btn_exit}">Exit</v-btn></h1>
+		    
+		    <v-row>
+		      <v-col cols="12" v-for="team in teams">
+			      <v-card class="mx-auto">
+			      	<v-card-title>{{getInitiativeNameByTeam(team)}}</v-card-title>
+					    <v-list-item>
+					      <v-list-item-content>
+					        <v-list-item-title><span><strong>{{F_NAME_LABEL}}</strong>: {{team.customData['name']}}</span></v-list-item-title>
+					        <v-list-item-title><span><strong>{{F_DESC_LABEL}}</strong>: {{team.customData['desc']}}</span></v-list-item-title>
+                  <v-list-item-title><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-title>
+                  <v-list-item-title><span  th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
+					        <v-list-item-title>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
+					      </v-list-item-content>
+								<v-avatar size="125" tile>
+									<v-img v-if="team.avatar" :src="getImageUrlNoCache(team.avatar)"></v-img>
+								</v-avatar>					    
+					    </v-list-item>
+					    <v-card-actions>
+					      <v-btn color="primary" text @click="editTeam(team)" th:text="#{teammgmt.btn_edit}">Edit</v-btn>
+					    </v-card-actions>					    
+					  </v-card>
+		      </v-col>
+		    </v-row>
+		  </v-container> 
+	  </v-content>
+	  
+	  
+	  <v-dialog v-model="dialog" persistent max-width="600px">
+      <v-card>
+        <v-form ref="form" v-model="valid">
+        <v-card-title>
+          <span class="headline" th:text="#{teammgmt.title_edit}">Team Edit</span>
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            <v-row>
+            	<v-col cols="12">
+            		<v-select v-model="currInitiativeId" :items="initiatives" item-value="initiativeId" :rules="fieldRules" required>
+            			<template v-slot:selection="data">
+            				{{getInitiativeName(data.item)}}
+            			</template>
+            			<template v-slot:item="data">
+            				{{getInitiativeName(data.item)}}
+            			</template>
+            		</v-select>
+            	</v-col>
+            </v-row>
+            <v-row v-show="currInitiativeId">
+              <v-col cols="12">
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" :maxlength="25" required></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['desc']" :label="F_DESC_LABEL+'*'" required></v-text-field>
+              </v-col>
+
+              <v-col cols="12">
+	              <v-file-input v-model="avatar" label="Avatar"></v-file-input>
+              </v-col>
+              
+              <v-col cols="12">
+                <v-text-field :rules="fieldRules" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" required></v-text-field>
+              </v-col>
+              <v-col cols="12">
+              <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :rules="[rules.required, rules.membersNum]" 
+              	:items="teamCandidates" item-text="nickname" item-disabled="disabled" hide-no-data
+              	chips deletable-chips label="Team Members" th:attr="label=#{teammgmt.lbl_members}" return-object multiple>
+              </v-autocomplete>
+              </v-col>
+            </v-row >
+            
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="closeEdit()" th:text="#{teammgmt.btn_close}">Close</v-btn>
+          <v-btn color="blue darken-1" text @click="saveTeam()" :disabled="!valid || !teamValid" th:text="#{teammgmt.btn_save}">Save</v-btn>
+        </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog> 
+    <v-dialog v-model="deleteDialog" max-width="480">
+      <v-card>
+        <v-card-title class="headline" th:text="#{teammgmt.btn_delete}">Delete message!</v-card-title>
+        <v-card-text th:text="#{teammgmt.confirm_delete}">Are you sure you want to delete? This cannot be undone!</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn  text @click="deleteDialog = false" th:text="#{teammgmt.btn_cancel}"> Cancel </v-btn>
+          <v-btn color="error" text @click="confirmDelete()"  th:text="#{teammgmt.btn_delete}">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>    
+    <v-dialog v-model="createDialogConfirm" max-width="640">
+      <v-card>
+        <v-card-title class="headline" th:text="#{teammgmt.btn_save}">Save message!</v-card-title>
+        <v-card-text th:text="#{teammgmt.confirm_save}">Save message!</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn  text @click="createDialogConfirm = false" th:text="#{teammgmt.btn_cancel}"> Cancel </v-btn>
+          <v-btn color="error" text @click="confirmSave()"  th:text="#{teammgmt.btn_save}">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="errorDialog" max-width="480">
+      <v-card>
+        <v-card-title class="headline" th:text="#{teammgmt.error_server}">Server error!</v-card-title>
+        <v-card-text th:text="#{teammgmt.error_server_msg}">Error message!</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn  text @click="errorDialog = false" th:text="#{teammgmt.btn_close}"> Close </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>    
+        
+  </v-app>
+</div>
+
+
+	<script src="../../lib/vue.min.js"></script>
+  <script src="../../lib/vuetify.min.js"></script>
+  <script>
+    var token = sessionStorage.access_token;
+    var conf = {headers: {
+    	Authorization: `Bearer ${token}`
+    }};
+    new Vue({
+      el: '#app',
+      vuetify: new Vuetify(),
+      data () {
+    	  return {
+    		  dialog: false,
+    		  deleteDialog: false,
+    		  createDialogConfirm: false,
+          errorDialog: false,
+    		  valid: true,
+    		  loading: false,
+    		  unauthorized: false,
+    		  TEAM_SIZE_LABEL: TEAM_SIZE_LABEL,
+    		  F_NAME_LABEL: F_NAME_LABEL,
+    		  F_DESC_LABEL: F_DESC_LABEL,
+    		  fieldRules: [
+    		        v => !!v || FIELD_REQUIRED
+    		  ],
+          rules: {
+						required: value => !!value || FIELD_REQUIRED,
+						membersNum: value => {
+							if(!this.teamValid()) 
+								return this.teamSizeErrorLabel();
+							return true;	
+						}
+         	},
+    		  teams: [],
+    		  initiatives: [],
+    		  currInitiativeId: null,
+    		  minTeamSize: 0,
+    		  candidates: [],
+    		  teamCandidates: [],
+    		  currTeam: {members: [], customData: {}},
+    		  isAdmin: false,
+    		  searchInput: null,
+    		  timerId: null,
+    		  avatar: null
+    	  }
+      },
+      created() {
+    	  console.log('Initializing');
+    	  this.load();
+      },
+      computed: {
+      },
+      watch: {
+    	  searchInput: function(val) {
+    		  if (val) this.getCandidates(val);
+    	  }
+      },
+      methods: {
+				getInitiative(id) {
+					for(i of this.initiatives) {
+						if(i.initiativeId == id) return i;
+					};
+					return null;
+				},
+    	  teamValid() {
+					if(!this.currInitiativeId) return true;
+					let i = this.getInitiative(this.currInitiativeId);
+					if(i) {
+						let b = !this.currTeam || !this.currTeam.members ||
+    		    ((this.currTeam.members.length >= Math.min(i.minTeamSize / 2, (this.currTeam.expected || 1000) / 2)) 
+    		    && (this.currTeam.members.length <= this.currTeam.expected)); 
+    		    return b;
+					} 
+    		  return true;
+    	  },
+    	  teamSizeErrorLabel() {
+					if(this.currInitiativeId) {
+						let i = this.getInitiative(this.currInitiativeId);
+						if(i) {
+							return TEAM_SIZE_ERROR.replace(/\{1\}/g, i.minTeamSize).replace(/\{0\}/g, Math.floor(i.minTeamSize/2));
+						}
+					}
+    		  return ''; 
+    	  },
+    	  getCandidates: function(val) {
+    		  const process = (remote) => {
+                  if (this.currTeam && this.currTeam.members) {
+                    // append also current members to appear as chips
+                    this.currTeam.members.forEach(m => {
+                       if (!remote.some(c => c.nickname == m.nickname)) {
+                         m.disabled = m.subscribed;
+                         remote.push(m);
+                       }
+                    });               
+                  }
+                  this.teamCandidates = remote;   			  
+    		  };
+    		  if (val && val.length > 2) {
+             clearTimeout(this.timerId);
+             this.timerId = setTimeout(() => {
+               axios.get(`../../api/initiatives/${this.currInitiativeId}/team/candidates?size=50&txt=${!!val ? val :''}`, conf).then((data) => {
+                  var remote = data.data.content.map(c => {
+                    c.disabled = c.subscribed && (!this.currTeam || this.currTeam.members.some(m => m.nickname == c.nickname));
+                    return c;
+                  });
+                  // disabled if subscribed by another team
+                  process(remote);
+                });
+             }, 200);
+    		  } else {
+    			  process([]);
+    		  }
+    	  },
+    	  logout() {
+    		      console.log('logout');
+              delete sessionStorage.access_token;
+              delete sessionStorage.access_token_expires_in;
+              window.location.href = AAC_ENDPOINT + '/logout?target=' + window.location.href; 
+    	  },
+    	  load() {
+					this.loading = true;
+          axios.get(`../../api/initiatives/teamleader`, conf).then((data) => {
+	        	this.initiatives = data.data;
+	        	let initiativeMap = {};
+	        	this.initiatives.forEach(i => {
+							initiativeMap[i.initiativeId] = i;
+						});
+	          axios.get(`../../api/initiatives/team/owner`, conf).then((data) => {
+		        	this.teams = data.data;
+							this.loading = false;
+							this.teams.forEach(t => {
+								let i = initiativeMap[t.initiativeId];
+								let now = Date.now();
+								t.isRunning = (i.campaign.dateFrom <= now) && (i.campaign.dateTo >= now);  
+							});
+						});	  						  	
+          }).catch(err => {
+          	console.log(err);
+            this.unauthorized = err.response.status == 401;
+            this.loading = false;                                   
+          });   
+    	  },
+    	  getInitiativeNameByTeam(team) {
+					for(i of this.initiatives) {
+						if(i.initiativeId == team.initiativeId) {
+							return i.campaign.name['it']; 
+						}
+					};
+					return '';
+				},
+    	  getInitiativeName(initiative) {
+					return initiative.campaign.name['it'];
+				},
+    	  getImageUrlNoCache(avatar) {
+					var d = new Date(); 
+					return avatar.url + '?ver=' + d.getTime();
+				},
+    	  getTeamMemberList(team) {
+					var list = '';
+					team.members.forEach(tm => {
+						list = list + tm.nickname + ', ';
+					});
+					return list.slice(0, -2);
+				},
+    	  createNew() {
+    		  this.currTeam = {members: [], customData: {}};
+    		  this.dialog = true;
+          this.getCandidates();
+    	  },
+    	  editTeam(team) {
+    		  var editTeam = Object.assign({}, team);
+    		  this.currTeam = editTeam;
+    		  this.currInitiativeId = editTeam.initiativeId;
+          this.dialog = true;    		  
+          this.getCandidates();
+    	  },
+    	  closeEdit() {
+          this.currTeam = {members: [], customData: {}};
+          this.currInitiativeId = null;
+    		  this.dialog = false;
+    	  },
+    	  saveTeam() {
+    		  if (this.currTeam.id) {
+    			  this.confirmSave();
+    		  }
+    		  else {
+    			  this.createDialogConfirm = true;
+    		  }
+    	  },
+    	  confirmSave() {
+    		  if (this.loading) return;
+    		  
+    		  var copy = Object.assign({}, this.currTeam);
+          this.loading = true;
+ 	        axios.post(`../../api/initiatives/${this.currInitiativeId}/team`, copy, conf)
+ 	        .then((data) => {
+	            this.createDialogConfirm = false;                  
+ 	            this.dialog = false;
+ 	            if (this.avatar) {
+ 	            	let formData = new FormData();
+	              formData.append("data", this.avatar);
+ 	            	axios.post(`../../api/team/${data.data.id}/avatar`, formData, conf)
+ 	            	.then((res) => {
+ 	            		this.load();
+ 	            	})
+ 	            	.catch(e => {
+			              this.loading = false;
+			              this.errorDialog = true;
+			              this.createDialogConfirm = false;                  
+			          });
+ 	            } else  {
+ 	            	this.load();
+ 	            }
+          })
+          .catch(e => {
+              this.loading = false;
+              this.errorDialog = true;
+              this.createDialogConfirm = false;                  
+          });
+    	  },
+    	  view(team) {
+    		  window.open(`../../web/hsc/${this.initiativeId}`, '_blank');
+    	  },
+    	  deleteTeam(team) {
+    		  this.currTeam = team;
+    		  this.deleteDialog = true;    		 
+    	  },
+    	  confirmDelete() {
+              axios.delete(`../../../api/initiatives/${this.initiativeId}/team/${this.currTeam.id}`, conf).then((data) => {
+                  this.deleteDialog = false;
+                  this.load();
+              });
+    	  },
+    	  back() {
+    		  history.back();
+    	  }
+      }
+    })
+  </script>
+</body>
+
+</html>

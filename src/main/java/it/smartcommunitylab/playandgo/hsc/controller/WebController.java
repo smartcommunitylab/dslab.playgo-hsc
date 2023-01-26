@@ -58,7 +58,6 @@ public class WebController {
 		return model;
 	}
 
-	
 	@GetMapping("/web/{type}/{initiative}/mgmt")
 	public 
 	ModelAndView webMgmt(@PathVariable String type, @PathVariable String initiative) {
@@ -71,4 +70,14 @@ public class WebController {
 		model.addObject("campaignName", obj.getCampaign().getName());
 		return model;
 	}
+	
+	@GetMapping("/web/team/mgmt")
+	public 
+	ModelAndView webTeamMgmt() {
+		ModelAndView model = new ModelAndView("web/teammgmthsc");
+		model.addObject("authEndpoint", authUri);
+		model.addObject("clientId", clientId);
+		return model;
+	}
+	
 }

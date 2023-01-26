@@ -16,5 +16,7 @@ public interface PlayerTeamRepository extends MongoRepository<PlayerTeam, String
 	
 	@Query("{'customData.name': {$regex: ?0, $options:'i'}}")
 	public List<PlayerTeam> findByNickname(String name);
+	
+	public List<PlayerTeam> findByOwner(String owner);
 
 }

@@ -163,5 +163,15 @@ public class PlayerTeamController {
 			@PathVariable String teamId) throws HSCError {
 		return teamService.getMyTeamInfo(initiativeId, teamId);
 	}
+	
+	@GetMapping("/api/initiatives/teamleader")
+	public List<Initiative> getTeamLeaderInitiatives() throws HSCError {
+		return teamService.getTeamLeaderInitiatives();
+	}
+	
+	@GetMapping("/api/initiatives/team/owner")
+	public List<PlayerTeam> getPlayerTeamByOwner() throws HSCError {
+		return teamService.getPlayerTeamByOwner();
+	}
 
 }
