@@ -18,6 +18,7 @@
       FIELD_REQUIRED = [[#{teammgmt.error_required}]];
       TEAM_SIZE_LABEL = [[#{teammgmt.hsc.team_size_label}]];
       TEAM_SIZE_ERROR = [[#{teammgmt.hsc.team_size_error}]];
+      CLASS_SIZE_ERROR = [[#{teammgmt.hsc.class_size_error}]];
       F_NAME_LABEL = [[#{teamboard.hsc.name}]];
       F_CLASS_LABEL = [[#{teamboard.hsc.cls}]];
       F_INSTITUTE_LABEL = [[#{teamboard.hsc.institute}]];
@@ -136,8 +137,8 @@
               </v-col>
               
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" 
-                	required :disabled="editing && currTeam.isRunning"></v-text-field>
+                <v-text-field :rules="[rules.required, rules.classNum]" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" 
+                	min="1" max="30" required :disabled="editing && currTeam.isRunning"></v-text-field>
               </v-col>
               <v-col cols="12">
               <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :rules="[rules.required, rules.membersNum]" 
@@ -223,7 +224,12 @@
 							if(!this.teamValid()) 
 								return this.teamSizeErrorLabel();
 							return true;	
-						}
+						},
+						classNum: value => {
+							if((value < 1) || (value > 30))
+								return CLASS_SIZE_ERROR;
+							return true;
+						}	
          	},
     		  teams: [],
     		  initiatives: [],
