@@ -19,7 +19,10 @@
       TEAM_SIZE_LABEL = [[#{teammgmt.hsc.team_size_label}]];
       TEAM_SIZE_ERROR = [[#{teammgmt.hsc.team_size_error}]];
       F_NAME_LABEL = [[#{teamboard.hsc.name}]];
-      F_DESC_LABEL = [[#{teamboard.hsc.desc}]];
+      F_CLASS_LABEL = [[#{teamboard.hsc.cls}]];
+      F_INSTITUTE_LABEL = [[#{teamboard.hsc.institute}]];
+      F_ADDRESS_LABEL = [[#{teamboard.hsc.address}]];
+      F_CAMPAIGN_LABEL = [[#{teamboard.hsc.campaign}]];
       /*]]>*/
     </script>
     
@@ -71,7 +74,9 @@
 					    <v-list-item>
 					      <v-list-item-content>
 					        <v-list-item-title><span><strong>{{F_NAME_LABEL}}</strong>: {{team.customData['name']}}</span></v-list-item-title>
-					        <v-list-item-title><span><strong>{{F_DESC_LABEL}}</strong>: {{team.customData['desc']}}</span></v-list-item-title>
+					        <v-list-item-title><span th:text="#{teamboard.hsc.institute}"></span>: {{team.customData['istitute']}}</v-list-item-title>
+					        <v-list-item-title><span th:text="#{teamboard.hsc.address}"></span>: {{team.customData['address']}}</v-list-item-title>
+					        <v-list-item-title><span th:text="#{teamboard.hsc.cls}"></span>: {{team.customData['cls']}}</v-list-item-title>
                   <v-list-item-title><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-title>
                   <v-list-item-title><span  th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
 					        <v-list-item-title>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
@@ -100,7 +105,8 @@
           <v-container>
             <v-row>
             	<v-col cols="12">
-            		<v-select v-model="currInitiativeId" :items="initiatives" item-value="initiativeId" :rules="fieldRules" required>
+            		<v-select v-model="currInitiativeId" :items="initiatives" item-value="initiativeId" :rules="fieldRules" 
+            			:label="F_CAMPAIGN_LABEL" required :disabled="editing">
             			<template v-slot:selection="data">
             				{{getInitiativeName(data.item)}}
             			</template>
@@ -112,10 +118,17 @@
             </v-row>
             <v-row v-show="currInitiativeId">
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" :maxlength="25" required></v-text-field>
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" maxlength="25" 
+                	required :disabled="editing && currTeam.isRunning"></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['desc']" :label="F_DESC_LABEL+'*'" required></v-text-field>
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['istitute']" :label="F_INSTITUTE_LABEL+'*'" maxlength="200" required></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['address']" :label="F_ADDRESS_LABEL+'*'" maxlength="200" required></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['cls']" :label="F_CLASS_LABEL+'*'" maxlength="15" required></v-text-field>
               </v-col>
 
               <v-col cols="12">
@@ -123,7 +136,8 @@
               </v-col>
               
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" required></v-text-field>
+                <v-text-field :rules="fieldRules" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" 
+                	required :disabled="editing && currTeam.isRunning"></v-text-field>
               </v-col>
               <v-col cols="12">
               <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :rules="[rules.required, rules.membersNum]" 
@@ -199,9 +213,7 @@
     		  valid: true,
     		  loading: false,
     		  unauthorized: false,
-    		  TEAM_SIZE_LABEL: TEAM_SIZE_LABEL,
-    		  F_NAME_LABEL: F_NAME_LABEL,
-    		  F_DESC_LABEL: F_DESC_LABEL,
+    		  editing: false,
     		  fieldRules: [
     		        v => !!v || FIELD_REQUIRED
     		  ],
@@ -277,7 +289,7 @@
                   }
                   this.teamCandidates = remote;   			  
     		  };
-    		  if (val && val.length > 2) {
+    		  if (val && val.length > 1) {
              clearTimeout(this.timerId);
              this.timerId = setTimeout(() => {
                axios.get(`../../api/initiatives/${this.currInitiativeId}/team/candidates?size=50&txt=${!!val ? val :''}`, conf).then((data) => {
@@ -288,7 +300,7 @@
                   // disabled if subscribed by another team
                   process(remote);
                 });
-             }, 200);
+             }, 300);
     		  } else {
     			  process([]);
     		  }
@@ -346,6 +358,7 @@
 				},
     	  createNew() {
     		  this.currTeam = {members: [], customData: {}};
+    		  this.editing = false;
     		  this.dialog = true;
           this.getCandidates();
     	  },
@@ -353,12 +366,14 @@
     		  var editTeam = Object.assign({}, team);
     		  this.currTeam = editTeam;
     		  this.currInitiativeId = editTeam.initiativeId;
-          this.dialog = true;    		  
+          this.editing = true; 		  
+          this.dialog = true;   
           this.getCandidates();
     	  },
     	  closeEdit() {
           this.currTeam = {members: [], customData: {}};
           this.currInitiativeId = null;
+    		  this.editing = false;
     		  this.dialog = false;
     	  },
     	  saveTeam() {

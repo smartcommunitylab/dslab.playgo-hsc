@@ -15,14 +15,15 @@
     /*<![CDATA[*/
       AUTH_ENDPOINT = [[${authEndpoint}]] ;
       CLIENT_ID = [[${clientId}]];
-      INITIATIVE_ID = [[${initiativeId}]];
-      MIN_TEAM_SIZE = [[${minTeamSize}]];
-      CAMPAIGN_NAME = [[${campaignName}]];
+      INITIATIVE = [[${initiative}]];
       FIELD_REQUIRED = [[#{teammgmt.error_required}]];
       TEAM_SIZE_LABEL = [[#{teammgmt.hsc.team_size_label}]];
       TEAM_SIZE_ERROR = [[#{teammgmt.hsc.team_size_error}]];
       F_NAME_LABEL = [[#{teamboard.hsc.name}]];
-      F_DESC_LABEL = [[#{teamboard.hsc.desc}]];
+      F_CLASS_LABEL = [[#{teamboard.hsc.cls}]];
+      F_INSTITUTE_LABEL = [[#{teamboard.hsc.institute}]];
+      F_ADDRESS_LABEL = [[#{teamboard.hsc.address}]];
+      F_CAMPAIGN_LABEL = [[#{teamboard.hsc.campaign}]];
       /*]]>*/
     </script>
     
@@ -55,7 +56,7 @@
       <v-btn icon>
         <v-icon @click="back()">mdi-chevron-left</v-icon>
       </v-btn>
-      <v-toolbar-title><span  th:text="#{teammgmt.title}">Team Management</span> - {{campaignName.it}}</v-toolbar-title>
+      <v-toolbar-title><span  th:text="#{teammgmt.title}">Team Management</span> - {{initiative.campaign.name.it}}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn icon>
         <v-icon @click="logout()">mdi-logout</v-icon>
@@ -75,12 +76,12 @@
 			      <v-card class="mx-auto">
 					    <v-list-item>
 					      <v-list-item-content>
-					        <v-list-item-title class="headline mb-1">
-					        	<span><strong>{{F_NAME_LABEL}}</strong>: {{team.customData['name']}}</span><br>
-					        	<span><strong>{{F_DESC_LABEL}}</strong>: {{team.customData['desc']}}</span><br>
-					        </v-list-item-title>
+					        <v-list-item-title><span><strong>{{F_NAME_LABEL}}</strong>: {{team.customData['name']}}</span></v-list-item-title>
+					        <v-list-item-title><span th:text="#{teamboard.hsc.institute}"></span>: {{team.customData['istitute']}}</v-list-item-title>
+					        <v-list-item-title><span th:text="#{teamboard.hsc.address}"></span>: {{team.customData['address']}}</v-list-item-title>
+					        <v-list-item-title><span th:text="#{teamboard.hsc.cls}"></span>: {{team.customData['cls']}}</v-list-item-title>
                   <v-list-item-title v-if="isAdmin"><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-title>
-                  <v-list-item-title><span  th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
+                  <v-list-item-title><span th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
 					        <v-list-item-title>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
 					      </v-list-item-content>
 								<v-avatar size="125" tile>
@@ -90,7 +91,6 @@
 					    <v-card-actions>
                 <v-btn color="primary" text @click="view(team)" th:text="#{teammgmt.btn_view}">View Board</v-btn>
 					      <v-btn v-if="isAdmin && !unauthorized && !loading" color="primary" text @click="editTeam(team)" th:text="#{teammgmt.btn_edit}">Edit</v-btn>
-					      <v-btn v-if="isAdmin && !unauthorized && !loading" color="error" @click="deleteTeam(team)" text th:text="#{teammgmt.btn_delete}">Delete</v-btn>
 					    </v-card-actions>					    
 					  </v-card>
 		      </v-col>
@@ -109,10 +109,17 @@
           <v-container>
             <v-row>
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" :maxlength="25" required></v-text-field>
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" :maxlength="25" 
+                	required :disabled="editing && currTeam.isRunning"></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['desc']" :label="F_DESC_LABEL+'*'" required></v-text-field>
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['istitute']" :label="F_INSTITUTE_LABEL+'*'" maxlength="200" required></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['address']" :label="F_ADDRESS_LABEL+'*'" maxlength="200" required></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['cls']" :label="F_CLASS_LABEL+'*'" maxlength="15" required></v-text-field>
               </v-col>
 
               <v-col cols="12">
@@ -120,7 +127,8 @@
               </v-col>
               
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" required></v-text-field>
+                <v-text-field :rules="fieldRules" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" 
+                	required :disabled="editing && currTeam.isRunning"></v-text-field>
               </v-col>
               <v-col cols="12">
               <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :error-messages="!teamValid ? teamSizeError : null" 
@@ -196,9 +204,9 @@
     		  valid: true,
     		  loading: false,
     		  unauthorized: false,
+    		  editing: false,
     		  TEAM_SIZE_LABEL: TEAM_SIZE_LABEL,
     		  F_NAME_LABEL: F_NAME_LABEL,
-    		  F_DESC_LABEL,
     		  fieldRules: [
     		        v => !!v || FIELD_REQUIRED
     		  ],
@@ -206,9 +214,9 @@
     		  candidates: [],
     		  teamCandidates: [],
     		  currTeam: {members: [], customData: {}},
-    		  initiativeId: INITIATIVE_ID,
-    		  minTeamSize: MIN_TEAM_SIZE,
-    		  campaignName: CAMPAIGN_NAME,
+    		  initiative: INITIATIVE,
+    		  minTeamSize: INITIATIVE.minTeamSize,
+    		  initiativeId: INITIATIVE.initiativeId,
     		  isAdmin: false,
     		  searchInput: null,
     		  timerId: null,
@@ -248,7 +256,7 @@
                   }
                   this.teamCandidates = remote;   			  
     		  };
-    		  if (val && val.length > 2) {
+    		  if (val && val.length > 1) {
              clearTimeout(this.timerId);
              this.timerId = setTimeout(() => {
                axios.get(`../../../api/initiatives/${this.initiativeId}/team/candidates?size=50&txt=${!!val ? val :''}`, conf).then((data) => {
@@ -259,7 +267,7 @@
                   // disabled if subscribed by another team
                   process(remote);
                 });
-             }, 200);
+             }, 300);
     		  } else {
     			  process([]);
     		  }
@@ -276,7 +284,11 @@
 	        	    this.isAdmin = admin.data;
 	              axios.get(`../../../api/initiatives/${this.initiativeId}/teams`, conf).then((data) => {
 	                  this.teams = data.data;
-                    this.loading = false;                 
+										this.teams.forEach(t => {
+											let now = Date.now();
+											t.isRunning = (this.initiative.campaign.dateFrom <= now) && (this.initiative.campaign.dateTo >= now);  
+										});	                  
+                   	this.loading = false;                 
 	              })
 	          }).catch(err => {
                   console.log(err);
@@ -297,17 +309,20 @@
 				},
     	  createNew() {
     		  this.currTeam = {members: [], customData: {}};
+    		  this.editing = false;
     		  this.dialog = true;
           this.getCandidates();
     	  },
     	  editTeam(team) {
     		  var editTeam = Object.assign({}, team);
     		  this.currTeam = editTeam;
+    		  this.editing = true;
           this.dialog = true;    		  
           this.getCandidates();
     	  },
     	  closeEdit() {
           this.currTeam = {members: [], customData: {}};
+          this.editing = false;
     		  this.dialog = false;
     	  },
     	  saveTeam() {
@@ -337,7 +352,7 @@
  	            	.catch(e => {
 			              this.loading = false;
 			              this.errorDialog = true;
-			              this.createDialogConfirm = false;                  
+			              this.createDialogConfirm = false;   
 			          });
  	            } else  {
  	            	this.load();

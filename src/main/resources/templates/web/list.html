@@ -12,6 +12,7 @@
 <script type="text/javascript" th:inline="javascript">
     /*<![CDATA[*/
       AUTH_ENDPOINT = [[${authEndpoint}]];
+      ISSUER_ENDPOINT = [[${issuerEndpoint}]];
       CLIENT_ID = [[${clientId}]];
       FIELD_REQUIRED = [[#{teammgmt.error_required}]];
       MIN_TEAM_SIZE_LABEL = [[#{initiativelist.min_team_size_label}]];
@@ -218,7 +219,7 @@
               console.log('logout');
                delete sessionStorage.access_token;
                delete sessionStorage.access_token_expires_in;
-               window.location.href = AAC_ENDPOINT + '/logout?target=' + window.location.href; 
+               //window.location.href = ISSUER_ENDPOINT + '/logout?target=' + window.location.href; 
          },
          toggleCreate(initiative) {
              this.loading = true;

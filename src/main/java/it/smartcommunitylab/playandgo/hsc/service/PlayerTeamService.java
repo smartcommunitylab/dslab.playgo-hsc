@@ -74,6 +74,9 @@ public class PlayerTeamService {
 	
 	public static final String KEY_NAME = "name";
 	public static final String KEY_DESC = "desc";
+	public static final String KEY_INSTITUTE = "institute";
+	public static final String KEY_CLASS = "cls";
+	public static final String KEY_ADDRESS = "address";
 	
 	@Autowired
 	private PlayGoEngineClientService engineService;
@@ -650,8 +653,14 @@ public class PlayerTeamService {
 		if(team.getCustomData().containsKey(PlayerTeamService.KEY_NAME)) {
 			publicTeam.getCustomData().put(PlayerTeamService.KEY_NAME, team.getCustomData().get(PlayerTeamService.KEY_NAME));
 		}
-		if(team.getCustomData().containsKey(PlayerTeamService.KEY_DESC)) {
-			publicTeam.getCustomData().put(PlayerTeamService.KEY_DESC, team.getCustomData().get(PlayerTeamService.KEY_DESC));
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_INSTITUTE)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_INSTITUTE, team.getCustomData().get(PlayerTeamService.KEY_INSTITUTE));
+		}
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_CLASS)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_CLASS, team.getCustomData().get(PlayerTeamService.KEY_CLASS));
+		}
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_ADDRESS)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_ADDRESS, team.getCustomData().get(PlayerTeamService.KEY_ADDRESS));
 		}
 		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
 		if(avatar != null) {
