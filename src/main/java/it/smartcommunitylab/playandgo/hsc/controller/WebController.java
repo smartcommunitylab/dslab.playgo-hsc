@@ -16,8 +16,6 @@
 
 package it.smartcommunitylab.playandgo.hsc.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -39,6 +37,8 @@ public class WebController {
 	private PlayerTeamService teamService;
     @Value("${spring.security.oauth2.client.provider.oauthprovider.authorization-uri}")
     private String authUri;
+    @Value("${spring.security.oauth2.client.provider.oauthprovider.issuer-uri}")
+    private String issuerUri;
     @Value("${spring.security.oauth2.client.registration.oauthprovider.client-id}")
     private String clientId;
 
@@ -56,20 +56,31 @@ public class WebController {
 	ModelAndView webMgmtList() {
 		ModelAndView model = new ModelAndView("web/list");
 		model.addObject("authEndpoint", authUri);
+		model.addObject("issuerEndpoint", issuerUri);
 		model.addObject("clientId", clientId);
 		return model;
 	}
 
-	
 	@GetMapping("/web/{type}/{initiative}/mgmt")
 	public 
 	ModelAndView webMgmt(@PathVariable String type, @PathVariable String initiative) {
 		ModelAndView model = new ModelAndView("web/mgmt"+type);
 		Initiative obj = teamService.getInitiative(initiative);
-		model.addObject("initiative", obj);
 		model.addObject("authEndpoint", authUri);
+		model.addObject("issuerEndpoint", issuerUri);
 		model.addObject("clientId", clientId);
-		
+		model.addObject("initiative", obj);
 		return model;
 	}
+	
+	@GetMapping("/web/team/mgmt")
+	public 
+	ModelAndView webTeamMgmt() {
+		ModelAndView model = new ModelAndView("web/teammgmthsc");
+		model.addObject("authEndpoint", authUri);
+		model.addObject("issuerEndpoint", issuerUri);
+		model.addObject("clientId", clientId);
+		return model;
+	}
+	
 }

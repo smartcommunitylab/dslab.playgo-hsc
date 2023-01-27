@@ -69,7 +69,7 @@ public class PlayerTeamController {
 	
 	@GetMapping("/api/initiatives/{initiativeId}/model")
 	public ResponseEntity<Initiative> getInitative(@PathVariable String initiativeId) {
-		return ResponseEntity.ok(teamService.getInitiative(initiativeId));
+		return ResponseEntity.ok(teamService.getInitiativeWeb(initiativeId));
 	}
 
 	@GetMapping("/api/initiatives/{initiativeId}/admin")
@@ -140,7 +140,7 @@ public class PlayerTeamController {
 			@PathVariable String teamId,
 			@RequestParam("data") MultipartFile data,
 			HttpServletRequest request) throws HSCError {
-		return avatarService.uploadTeamAvatar(teamId, data);
+		return teamService.uploadTeamAvatar(teamId, data);
 	}
 	
 	@GetMapping("/api/team/{teamId}/avatar")
@@ -162,6 +162,16 @@ public class PlayerTeamController {
 			@PathVariable String initiativeId, 
 			@PathVariable String teamId) throws HSCError {
 		return teamService.getMyTeamInfo(initiativeId, teamId);
+	}
+	
+	@GetMapping("/api/initiatives/teamleader")
+	public List<Initiative> getTeamLeaderInitiatives() throws HSCError {
+		return teamService.getTeamLeaderInitiatives();
+	}
+	
+	@GetMapping("/api/initiatives/team/owner")
+	public List<PlayerTeam> getPlayerTeamByOwner() throws HSCError {
+		return teamService.getPlayerTeamByOwner();
 	}
 
 }

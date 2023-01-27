@@ -23,8 +23,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
@@ -39,6 +45,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
 import it.smartcommunitylab.playandgo.hsc.domain.CampaignSubscription;
@@ -56,12 +65,27 @@ import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
  */
 @Service
 public class PlayGoEngineClientService {
+	private static final Logger logger = LoggerFactory.getLogger(PlayGoEngineClientService.class);
 
 	@Autowired
 	private WebClient webClient;
 	
 	@Autowired
 	private SecurityHelper securityHelper;
+	
+	private LoadingCache<String, List<UserRole>> userRoles;
+	
+	@PostConstruct
+	private void init() {
+		userRoles = CacheBuilder.newBuilder().refreshAfterWrite(30, TimeUnit.MINUTES).build(new CacheLoader<String, List<UserRole>>() {
+
+			@Override
+			public List<UserRole> load(String key) throws Exception {
+				return getExtUserRoles();
+			}
+		});
+	}
+	
 	
 	@SuppressWarnings("unchecked")
 	public Map<String, Double> getPositions(String campaignId, Collection<TeamMember> teamMembers) {
@@ -77,7 +101,7 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 
-	public List<UserRole> getUserRoles() {
+	private List<UserRole> getExtUserRoles() {
 		ParameterizedTypeReference<List<UserRole>> ref = new ParameterizedTypeReference<List<UserRole>>() {};
 		return 
 		webClient.get()
@@ -86,6 +110,16 @@ public class PlayGoEngineClientService {
 		.retrieve()
 		.bodyToMono(ref)
 		.block();
+	}
+	
+	public List<UserRole> getUserRoles() {
+		String email = securityHelper.getCurrentPreferredUsername();
+		try {
+			return userRoles.get(email);
+		} catch (ExecutionException e) {
+			logger.warn("getUserRoles error:" + e.getMessage());
+		}
+		return Collections.emptyList();
 	}
 
 	public List<PlayerInfo> getPlayersWithAvatars(String territory, List<String> players) {

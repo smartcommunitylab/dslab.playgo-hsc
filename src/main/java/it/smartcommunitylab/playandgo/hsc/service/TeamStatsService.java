@@ -174,11 +174,11 @@ public class TeamStatsService {
     		if(team.getCustomData().containsKey(PlayerTeamService.KEY_INSTITUTE)) {
     			c.getCustomData().put(PlayerTeamService.KEY_INSTITUTE, team.getCustomData().get(PlayerTeamService.KEY_INSTITUTE));
     		}
-    		if(team.getCustomData().containsKey(PlayerTeamService.KEY_SCHOOL)) {
-    			c.getCustomData().put(PlayerTeamService.KEY_SCHOOL, team.getCustomData().get(PlayerTeamService.KEY_SCHOOL));
-    		}
     		if(team.getCustomData().containsKey(PlayerTeamService.KEY_CLASS)) {
     			c.getCustomData().put(PlayerTeamService.KEY_CLASS, team.getCustomData().get(PlayerTeamService.KEY_CLASS));
+    		}
+    		if(team.getCustomData().containsKey(PlayerTeamService.KEY_ADDRESS)) {
+    			c.getCustomData().put(PlayerTeamService.KEY_ADDRESS, team.getCustomData().get(PlayerTeamService.KEY_ADDRESS));
     		}
     	}
     }

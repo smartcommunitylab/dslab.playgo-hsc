@@ -39,11 +39,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import it.smartcommunitylab.playandgo.hsc.domain.Avatar;
 import it.smartcommunitylab.playandgo.hsc.domain.Campaign;
 import it.smartcommunitylab.playandgo.hsc.domain.Image;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
@@ -71,9 +73,10 @@ public class PlayerTeamService {
 	private static final Logger logger = LoggerFactory.getLogger(PlayerTeamService.class);
 	
 	public static final String KEY_NAME = "name";
+	public static final String KEY_DESC = "desc";
 	public static final String KEY_INSTITUTE = "institute";
-	public static final String KEY_SCHOOL = "school";
 	public static final String KEY_CLASS = "cls";
+	public static final String KEY_ADDRESS = "address";
 	
 	@Autowired
 	private PlayGoEngineClientService engineService;
@@ -130,31 +133,110 @@ public class PlayerTeamService {
 		if (campaigns != null) return initiativeRepo.findByCampaignIds(territories);
 		return Collections.emptyList();
 	}
+	
+	public boolean isCampaignManager(String initiativeId) {
+		Initiative initiative = initiativeRepo.findById(initiativeId).orElse(null);
+		if(initiative == null) {
+			return false;
+		}
+		List<UserRole> roles = engineService.getUserRoles();
+		if (isAdmin(roles)) 
+			return true;
+		return roles.stream().anyMatch(r -> {
+			if(r.getRole().equals(UserRole.Role.territory) && r.getEntityId().equals(initiative.getCampaign().getTerritoryId()))
+				return true;
+			if(r.getRole().equals(UserRole.Role.campaign) && r.getEntityId().equals(initiative.getCampaign().getCampaignId()))
+				return true;
+			return false;
+		});
+	}
+	
+	public boolean isTeamManager(String initiativeId) {
+		String email = securityHelper.getCurrentPreferredUsername();
+		Initiative initiative = initiativeRepo.findById(initiativeId).orElse(null);
+		return isTeamManager(initiative, email);
+	}
+	
+	public boolean isTeamManager(Initiative initiative, String email) {
+		if(initiative == null) {
+			return false;
+		}
+		boolean match = initiative.getTeamLeaderDomainList().stream().anyMatch(r -> {
+			return email.toLowerCase().endsWith(r.toLowerCase());
+		});
+		if(match)
+			return true;
+		match = initiative.getTeamLeaderList().stream().anyMatch(r -> {
+			return email.toLowerCase().equals(r.toLowerCase());
+		});
+		if(match)
+			return true;
+		return false;		
+	}
+	
+	public List<Initiative> getTeamLeaderInitiatives() {
+		String email = securityHelper.getCurrentPreferredUsername();
+		List<Initiative> list = initiativeRepo.findAll();
+		List<Initiative> result = list.stream().filter(i -> isTeamManager(i, email)).collect(Collectors.toList());
+		return result;
+	}
+	
+	public List<PlayerTeam> getPlayerTeamByOwner() {
+		String email = securityHelper.getCurrentPreferredUsername();
+		List<PlayerTeam> result = teamRepo.findByOwner(email);
+		result.forEach(t -> addSmallAvatar(t));
+		return result;
+	}
+	
+	public boolean isMyTeam(String teamId) {
+		String email = securityHelper.getCurrentPreferredUsername();
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if(team != null) {
+			return team.getOwner().equals(email);
+		}
+		return false;
+	}
+	
+	public boolean isRunning(String initiativeId) {
+		Initiative initiative = initiativeRepo.findById(initiativeId).orElse(null);
+		if(initiative != null) {
+			long millis = System.currentTimeMillis();
+			return (initiative.getCampaign().getDateFrom() <= millis) && (initiative.getCampaign().getDateTo() >= millis);
+		}
+		return false;
+	}
 
 	public Page<PlayerInfo> searchPlayers(String initiativeId, String txt, Pageable pageRequest) {
-		Initiative initiative = getInitiative(initiativeId);
-		if (initiative != null) {
-			Page<PlayerInfo> page = engineService.getPlayers(txt, initiative.getCampaign().getTerritoryId(), pageRequest);
-			if (page.hasContent()) {
-				final Set<TeamMember> members = teamRepo.findByInitiativeId(initiativeId)
-						.stream()
-						.map(t -> t.getMembers())
-						.flatMap(Collection::stream)
-						.collect(Collectors.toSet());
-				final Set<String> registered = members
-						.stream()
-						.filter(t -> t.isSubscribed())
-						.map(t -> t.getNickname())
-						.collect(Collectors.toSet());
-				page.getContent().forEach(p -> p.setSubscribed(registered.contains(p.getNickname())));
-			}
-			return page;
+		if(isCampaignManager(initiativeId) || isTeamManager(initiativeId)) {
+			Initiative initiative = getInitiative(initiativeId);
+			if (initiative != null) {
+				Page<PlayerInfo> page = engineService.getPlayers(txt, initiative.getCampaign().getTerritoryId(), pageRequest);
+				if (page.hasContent()) {
+					final Set<TeamMember> members = teamRepo.findByInitiativeId(initiativeId)
+							.stream()
+							.map(t -> t.getMembers())
+							.flatMap(Collection::stream)
+							.collect(Collectors.toSet());
+					final Set<String> registered = members
+							.stream()
+							.filter(t -> t.isSubscribed())
+							.map(t -> t.getNickname())
+							.collect(Collectors.toSet());
+					page.getContent().forEach(p -> p.setSubscribed(registered.contains(p.getNickname())));
+				}
+				return page;
+			}			
 		}
 		return Page.empty();
 	}
 	
 	public PlayerTeam saveTeam(String initiativeId, PlayerTeam team) throws HSCError {
 		String currentUser = securityHelper.getCurrentPreferredUsername();
+		boolean isCampaignManager = isCampaignManager(initiativeId);
+		boolean isTeamManager = isTeamManager(initiativeId);
+		if(!isCampaignManager && !isTeamManager) {
+			throw new OperationNotPermittedException("TEAM");
+		}
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
 			throw new NotFoundException("NO_INITIATIVE");
@@ -171,9 +253,8 @@ public class PlayerTeamService {
 			}			
 		}
 
-		List<Initiative> userInitiatives = getInitativesForManager();
-		boolean isManager = userInitiatives.stream().anyMatch(i -> i.getInitiativeId().equals(initiativeId));
 		team.setInitiativeId(initiativeId);
+		boolean isRunning = isRunning(initiativeId);
 		
 		Set<TeamMember> toRemove = new HashSet<>();
 		Set<TeamMember> toAdd = new HashSet<>(team.getMembers());
@@ -184,19 +265,23 @@ public class PlayerTeamService {
 				throw new NotFoundException("NO_TEAM");
 			}
 
-			if (!isManager && !existing.getOwner().equals(currentUser)) {
+			if (!existing.getOwner().equals(currentUser)) {
 				// throw access exception
 				throw new OperationNotPermittedException("OWNER");
 			} 
 			
-			if (!isManager && !Boolean.TRUE.equals(initiative.getCanEdit())) {
+			if (!Boolean.TRUE.equals(initiative.getCanEdit())) {
 				throw new OperationNotEnabledException("EDIT");
 			}
 			toRemove = new HashSet<>(existing.getMembers());
 			toRemove.removeAll(team.getMembers());
 			toAdd.removeAll(existing.getMembers());
+			if(isRunning) {
+				team.getCustomData().put(KEY_NAME, existing.getCustomData().get(KEY_NAME));
+				team.setExpected(existing.getExpected());
+			}
 		} else {
-			if (!isManager && !Boolean.TRUE.equals(initiative.getCanCreate())) {
+			if (!Boolean.TRUE.equals(initiative.getCanCreate())) {
 				throw new OperationNotEnabledException("CREATE");
 			}
 			team.setId(UUID.randomUUID().toString());
@@ -228,6 +313,9 @@ public class PlayerTeamService {
 	}
 	
 	public void deleteTeam(String initiativeId, String teamId) throws HSCError {
+		if(!isAdmin()) {
+			throw new OperationNotPermittedException("TEAM");
+		}
 		String currentUser = securityHelper.getCurrentPreferredUsername();
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
@@ -289,6 +377,12 @@ public class PlayerTeamService {
 		}
 	}
 
+	public Initiative getInitiativeWeb(String initiativeId) {
+		if(isCampaignManager(initiativeId))
+			return initiativeRepo.findById(initiativeId).orElse(null);
+		return null;
+	}
+	
 	public Initiative getInitiative(String initiativeId) {
 		return initiativeRepo.findById(initiativeId).orElse(null);
 	}
@@ -300,6 +394,7 @@ public class PlayerTeamService {
 			initiativeRepo.save(i);
 		});
 	}
+	
 	public void setInitiativeEdit(String initiativeId, boolean value) {
 		List<Initiative> initiatives = getInitativesForManager();
 		initiatives.stream().filter(i -> i.getInitiativeId().equals(initiativeId)).forEach(i -> {
@@ -313,16 +408,22 @@ public class PlayerTeamService {
 	 * @param initiative
 	 * @return
 	 */
-	public Initiative saveInitiative(String initiativeId, Initiative initiative) {
+	public Initiative saveInitiative(String initiativeId, Initiative initiative) throws HSCError {
+		if(!isCampaignManager(initiativeId)) {
+			throw new OperationNotPermittedException("CAMPAIGN");
+		}
 		Initiative old = initiativeRepo.findById(initiativeId).orElse(null);
 		if (old != null) {
-			old.setBonus(initiative.getBonus());
-			old.setBonusThreshold(initiative.getBonusThreshold());
+			//old.setBonus(initiative.getBonus());
+			//old.setBonusThreshold(initiative.getBonusThreshold());
 			old.setMinTeamSize(initiative.getMinTeamSize());
+			old.setTeamLeaderDomainList(initiative.getTeamLeaderDomainList());
+			old.setTeamLeaderList(initiative.getTeamLeaderList());
 			return initiativeRepo.save(old);
 		}
 		return null;
 	}
+	
 	public List<PlayerTeam> getUserTeamsForInitiative(String initiativeId) {
 		List<PlayerTeam> result = new ArrayList<>();
 		List<Initiative> initiatives = getInitativesForManager();
@@ -388,6 +489,11 @@ public class PlayerTeamService {
 		}
 	}
 	
+	private boolean isAdmin() {
+		List<UserRole> roles = engineService.getUserRoles();
+		return isAdmin(roles);
+	}
+	
 	private boolean isAdmin(List<UserRole> roles) {
 		return roles != null && roles.stream().anyMatch(r -> r.getRole().equals(UserRole.Role.admin));
 	}
@@ -436,8 +542,7 @@ public class PlayerTeamService {
 				.stream()
 				.map(t -> t.getNickname())
 				.collect(Collectors.toSet());
-		return registered.contains(nickname);
-		
+		return registered.contains(nickname);			
 	}
 	
 	public String subscribeTeamMember(String initiativeId, String nickname) throws HSCError {
@@ -528,6 +633,17 @@ public class PlayerTeamService {
 		return team;
 	}
 	
+	public Avatar uploadTeamAvatar(String teamId, MultipartFile data) throws HSCError {
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if(team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		if(!isCampaignManager(team.getInitiativeId()) && !isMyTeam(teamId)) {
+			throw new OperationNotPermittedException("TEAM");
+		}
+		return avatarService.uploadTeamAvatar(teamId, data);
+	}
+	
 	private PlayerTeam getPublicTeamInfo(PlayerTeam team) {
 		PlayerTeam publicTeam = new PlayerTeam();
 		publicTeam.setId(team.getId());
@@ -540,11 +656,11 @@ public class PlayerTeamService {
 		if(team.getCustomData().containsKey(PlayerTeamService.KEY_INSTITUTE)) {
 			publicTeam.getCustomData().put(PlayerTeamService.KEY_INSTITUTE, team.getCustomData().get(PlayerTeamService.KEY_INSTITUTE));
 		}
-		if(team.getCustomData().containsKey(PlayerTeamService.KEY_SCHOOL)) {
-			publicTeam.getCustomData().put(PlayerTeamService.KEY_SCHOOL, team.getCustomData().get(PlayerTeamService.KEY_SCHOOL));
-		}
 		if(team.getCustomData().containsKey(PlayerTeamService.KEY_CLASS)) {
 			publicTeam.getCustomData().put(PlayerTeamService.KEY_CLASS, team.getCustomData().get(PlayerTeamService.KEY_CLASS));
+		}
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_ADDRESS)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_ADDRESS, team.getCustomData().get(PlayerTeamService.KEY_ADDRESS));
 		}
 		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
 		if(avatar != null) {
