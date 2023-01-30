@@ -15,7 +15,7 @@
       ISSUER_ENDPOINT = [[${issuerEndpoint}]];
       CLIENT_ID = [[${clientId}]];
       FIELD_REQUIRED = [[#{teammgmt.error_required}]];
-      MIN_TEAM_SIZE_LABEL = [[#{initiativelist.min_team_size_label}]];
+      MAX_TEAM_SIZE_LABEL = [[#{initiativelist.max_team_size_label}]];
       BONUS_THRESHOLD_LABEL =[[#{initiativelist.bonus_threshold_label}]];
       BONUS_LABEL =[[#{initiativelist.bonus_label}]];
       TEAM_LEADER_LABEL = [[#{initiativelist.teamLeaderList}]];
@@ -115,14 +115,9 @@
         <v-card-text>
           <v-container v-if="initiative">
             <v-row>
-              <!-- <v-col cols="12">
-                <v-text-field :rules="fieldRules" type="number" v-model="initiative.bonus" :persistent-hint="true" :label="BONUS_LABEL" required></v-text-field>
-              </v-col>
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" type="number" v-model="initiative.bonusThreshold" :persistent-hint="true" :label="BONUS_THRESHOLD_LABEL" required></v-text-field>
-              </v-col> -->              
-              <v-col cols="12">
-                <v-text-field :rules="fieldRules" type="number" v-model="initiative.minTeamSize" :persistent-hint="true" :label="MIN_TEAM_SIZE_LABEL" required></v-text-field>
+                <v-text-field :rules="fieldRules" type="number" v-model="initiative.maxTeamSize" :persistent-hint="true" :label="MAX_TEAM_SIZE_LABEL" 
+                	min="1" max="100" required></v-text-field>
               </v-col>
               <v-col cols="12">
               	<span th:text="#{initiativelist.teamLeaderList}"></span>
@@ -176,7 +171,6 @@
     		  loading: false,
     		  initiative: null,
     		  editDialog: false,
-    		  MIN_TEAM_SIZE_LABEL: MIN_TEAM_SIZE_LABEL,
     		  BONUS_THRESHOLD_LABEL: BONUS_THRESHOLD_LABEL,
     		  BONUS_LABEL: BONUS_LABEL,
     		  initiatives: [],
@@ -204,7 +198,7 @@
       },
       computed: {
     	  valid() {
-    		  return this.initiative && this.initiative.bonusThreshold > 0 && this.initiative.bonusThreshold <= 100 && this.initiative.bonus > 0 && this.initiative.minTeamSize > 0;  
+    		  return this.initiative && this.initiative.maxTeamSize > 0;  
     	  },
       },
       methods: {
