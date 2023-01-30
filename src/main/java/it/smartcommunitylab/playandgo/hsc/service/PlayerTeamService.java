@@ -74,9 +74,6 @@ public class PlayerTeamService {
 	
 	public static final String KEY_NAME = "name";
 	public static final String KEY_DESC = "desc";
-	public static final String KEY_INSTITUTE = "institute";
-	public static final String KEY_CLASS = "cls";
-	public static final String KEY_ADDRESS = "address";
 	
 	@Autowired
 	private PlayGoEngineClientService engineService;
@@ -416,7 +413,7 @@ public class PlayerTeamService {
 		if (old != null) {
 			//old.setBonus(initiative.getBonus());
 			//old.setBonusThreshold(initiative.getBonusThreshold());
-			old.setMinTeamSize(initiative.getMinTeamSize());
+			old.setMaxTeamSize(initiative.getMaxTeamSize());
 			old.setTeamLeaderDomainList(initiative.getTeamLeaderDomainList());
 			old.setTeamLeaderList(initiative.getTeamLeaderList());
 			return initiativeRepo.save(old);
@@ -481,7 +478,7 @@ public class PlayerTeamService {
 				initiative.setCanEdit(true);
 				initiative.setBonus(300d);
 				initiative.setBonusThreshold(90d);
-				initiative.setMinTeamSize(10);
+				initiative.setMaxTeamSize(30);
 				initiative.setType("hsc");
 			}
 			initiative.setCampaign(c);
@@ -653,14 +650,8 @@ public class PlayerTeamService {
 		if(team.getCustomData().containsKey(PlayerTeamService.KEY_NAME)) {
 			publicTeam.getCustomData().put(PlayerTeamService.KEY_NAME, team.getCustomData().get(PlayerTeamService.KEY_NAME));
 		}
-		if(team.getCustomData().containsKey(PlayerTeamService.KEY_INSTITUTE)) {
-			publicTeam.getCustomData().put(PlayerTeamService.KEY_INSTITUTE, team.getCustomData().get(PlayerTeamService.KEY_INSTITUTE));
-		}
-		if(team.getCustomData().containsKey(PlayerTeamService.KEY_CLASS)) {
-			publicTeam.getCustomData().put(PlayerTeamService.KEY_CLASS, team.getCustomData().get(PlayerTeamService.KEY_CLASS));
-		}
-		if(team.getCustomData().containsKey(PlayerTeamService.KEY_ADDRESS)) {
-			publicTeam.getCustomData().put(PlayerTeamService.KEY_ADDRESS, team.getCustomData().get(PlayerTeamService.KEY_ADDRESS));
+		if(team.getCustomData().containsKey(PlayerTeamService.KEY_DESC)) {
+			publicTeam.getCustomData().put(PlayerTeamService.KEY_DESC, team.getCustomData().get(PlayerTeamService.KEY_DESC));
 		}
 		Image avatar = avatarService.getTeamSmallAvatar(team.getId());
 		if(avatar != null) {

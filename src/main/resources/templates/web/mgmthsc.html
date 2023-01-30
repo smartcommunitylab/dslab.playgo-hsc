@@ -21,10 +21,7 @@
       TEAM_SIZE_ERROR = [[#{teammgmt.hsc.team_size_error}]];
       CLASS_SIZE_ERROR = [[#{teammgmt.hsc.class_size_error}]];
       F_NAME_LABEL = [[#{teamboard.hsc.name}]];
-      F_CLASS_LABEL = [[#{teamboard.hsc.cls}]];
-      F_INSTITUTE_LABEL = [[#{teamboard.hsc.institute}]];
-      F_ADDRESS_LABEL = [[#{teamboard.hsc.address}]];
-      F_CAMPAIGN_LABEL = [[#{teamboard.hsc.campaign}]];
+      F_DESC_LABEL = [[#{teamboard.hsc.desc}]];
       /*]]>*/
     </script>
     
@@ -78,9 +75,7 @@
 					    <v-list-item>
 					      <v-list-item-content>
 					        <v-list-item-title><span><strong>{{F_NAME_LABEL}}</strong>: {{team.customData['name']}}</span></v-list-item-title>
-					        <v-list-item-title><span th:text="#{teamboard.hsc.institute}"></span>: {{team.customData['istitute']}}</v-list-item-title>
-					        <v-list-item-title><span th:text="#{teamboard.hsc.address}"></span>: {{team.customData['address']}}</v-list-item-title>
-					        <v-list-item-title><span th:text="#{teamboard.hsc.cls}"></span>: {{team.customData['cls']}}</v-list-item-title>
+					        <v-list-item-title><span th:text="#{teamboard.hsc.desc}"></span>: {{team.customData['desc']}}</v-list-item-title>
                   <v-list-item-title v-if="isAdmin"><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-title>
                   <v-list-item-title><span th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
 					        <v-list-item-title>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
@@ -114,13 +109,7 @@
                 	required :disabled="editing && currTeam.isRunning"></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['istitute']" :label="F_INSTITUTE_LABEL+'*'" maxlength="200" required></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['address']" :label="F_ADDRESS_LABEL+'*'" maxlength="200" required></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['cls']" :label="F_CLASS_LABEL+'*'" maxlength="15" required></v-text-field>
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['desc']" :label="F_DESC_LABEL+'*'" maxlength="200" required></v-text-field>
               </v-col>
 
               <v-col cols="12">
@@ -129,10 +118,10 @@
               
               <v-col cols="12">
                 <v-text-field :rules="[rules.required, rules.classNum]" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" 
-                	min="1" max="30" required :disabled="editing && currTeam.isRunning"></v-text-field>
+                	min="1" required :disabled="editing && currTeam.isRunning"></v-text-field>
               </v-col>
               <v-col cols="12">
-              <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :error-messages="!teamValid ? teamSizeError : null" 
+              <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :rules="[rules.required, rules.membersNum]" 
               	:items="teamCandidates" item-text="nickname" item-disabled="disabled" hide-no-data
               	chips deletable-chips label="Team Members" th:attr="label=#{teammgmt.lbl_members}" return-object multiple>
               </v-autocomplete>
@@ -219,8 +208,8 @@
 							return true;	
 						},
 						classNum: value => {
-							if((value < 1) || (value > 30))
-								return CLASS_SIZE_ERROR;
+							if(!this.initiative || (value < 1) || (value > this.maxTeamSize))
+								return CLASS_SIZE_ERROR.replace(/\{0\}/g, this.maxTeamSize);
 							return true;
 						}	
          	},    		  
@@ -229,7 +218,7 @@
     		  teamCandidates: [],
     		  currTeam: {members: [], customData: {}},
     		  initiative: INITIATIVE,
-    		  minTeamSize: INITIATIVE.minTeamSize,
+    		  maxTeamSize: INITIATIVE.maxTeamSize,
     		  initiativeId: INITIATIVE.initiativeId,
     		  isAdmin: false,
     		  searchInput: null,
@@ -242,14 +231,6 @@
     	  this.load();
       },
       computed: {
-    	  teamValid() {
-    		  return !this.currTeam || !this.currTeam.members ||
-    		    this.currTeam.members.length >= Math.min(this.minTeamSize / 2, (this.currTeam.expected || 1000) / 2) 
-    		    && this.currTeam.members.length <= this.currTeam.expected
-    	  },
-    	  teamSizeError() {
-    		  return TEAM_SIZE_ERROR.replace(/\{1\}/g, this.minTeamSize).replace(/\{0\}/g, Math.floor(this.minTeamSize/2)).split('\n'); 
-    	  }
       },
       watch: {
     	  searchInput: function(val) {
@@ -257,6 +238,13 @@
     	  }
       },
       methods: {
+    	  teamValid() {
+    		  return this.currTeam && this.currTeam.members 
+    		  	&& (this.currTeam.members.length <= this.currTeam.expected) 
+    	  },
+    	  teamSizeErrorLabel() {
+    		  return TEAM_SIZE_ERROR.replace(/\{0\}/g, this.currTeam.expected); 
+    	  },
     	  getCandidates: function(val) {
     		  const process = (remote) => {
                   if (this.currTeam && this.currTeam.members) {
@@ -322,7 +310,7 @@
 					return list.slice(0, -2);
 				},
     	  createNew() {
-    		  this.currTeam = {members: [], customData: {}};
+    		  this.currTeam = {members: [], customData: {}, expected: this.maxTeamSize};
     		  this.editing = false;
     		  this.dialog = true;
           this.getCandidates();

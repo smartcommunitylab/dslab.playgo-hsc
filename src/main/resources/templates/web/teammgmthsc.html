@@ -20,9 +20,7 @@
       TEAM_SIZE_ERROR = [[#{teammgmt.hsc.team_size_error}]];
       CLASS_SIZE_ERROR = [[#{teammgmt.hsc.class_size_error}]];
       F_NAME_LABEL = [[#{teamboard.hsc.name}]];
-      F_CLASS_LABEL = [[#{teamboard.hsc.cls}]];
-      F_INSTITUTE_LABEL = [[#{teamboard.hsc.institute}]];
-      F_ADDRESS_LABEL = [[#{teamboard.hsc.address}]];
+      F_DESC_LABEL = [[#{teamboard.hsc.desc}]];
       F_CAMPAIGN_LABEL = [[#{teamboard.hsc.campaign}]];
       /*]]>*/
     </script>
@@ -75,9 +73,7 @@
 					    <v-list-item>
 					      <v-list-item-content>
 					        <v-list-item-title><span><strong>{{F_NAME_LABEL}}</strong>: {{team.customData['name']}}</span></v-list-item-title>
-					        <v-list-item-title><span th:text="#{teamboard.hsc.institute}"></span>: {{team.customData['istitute']}}</v-list-item-title>
-					        <v-list-item-title><span th:text="#{teamboard.hsc.address}"></span>: {{team.customData['address']}}</v-list-item-title>
-					        <v-list-item-title><span th:text="#{teamboard.hsc.cls}"></span>: {{team.customData['cls']}}</v-list-item-title>
+					        <v-list-item-title><span th:text="#{teamboard.hsc.desc}"></span>: {{team.customData['desc']}}</v-list-item-title>
                   <v-list-item-title><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-title>
                   <v-list-item-title><span  th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
 					        <v-list-item-title>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
@@ -123,13 +119,7 @@
                 	required :disabled="editing && currTeam.isRunning"></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['istitute']" :label="F_INSTITUTE_LABEL+'*'" maxlength="200" required></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['address']" :label="F_ADDRESS_LABEL+'*'" maxlength="200" required></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field :rules="fieldRules" v-model="currTeam.customData['cls']" :label="F_CLASS_LABEL+'*'" maxlength="15" required></v-text-field>
+                <v-text-field :rules="fieldRules" v-model="currTeam.customData['desc']" :label="F_DESC_LABEL+'*'" maxlength="200" required></v-text-field>
               </v-col>
 
               <v-col cols="12">
@@ -226,15 +216,15 @@
 							return true;	
 						},
 						classNum: value => {
-							if((value < 1) || (value > 30))
-								return CLASS_SIZE_ERROR;
+							let i = this.getInitiative(this.currInitiativeId);
+							if(!i || (value < 1) || (value > i.maxTeamSize))
+								return CLASS_SIZE_ERROR.replace(/\{0\}/g, i.maxTeamSize);
 							return true;
 						}	
          	},
     		  teams: [],
     		  initiatives: [],
     		  currInitiativeId: null,
-    		  minTeamSize: 0,
     		  candidates: [],
     		  teamCandidates: [],
     		  currTeam: {members: [], customData: {}},
@@ -266,9 +256,8 @@
 					if(!this.currInitiativeId) return true;
 					let i = this.getInitiative(this.currInitiativeId);
 					if(i) {
-						let b = !this.currTeam || !this.currTeam.members ||
-    		    ((this.currTeam.members.length >= Math.min(i.minTeamSize / 2, (this.currTeam.expected || 1000) / 2)) 
-    		    && (this.currTeam.members.length <= this.currTeam.expected)); 
+						let b = this.currTeam && this.currTeam.members 
+    		    && (this.currTeam.members.length <= this.currTeam.expected) 
     		    return b;
 					} 
     		  return true;
@@ -277,7 +266,7 @@
 					if(this.currInitiativeId) {
 						let i = this.getInitiative(this.currInitiativeId);
 						if(i) {
-							return TEAM_SIZE_ERROR.replace(/\{1\}/g, i.minTeamSize).replace(/\{0\}/g, Math.floor(i.minTeamSize/2));
+							return TEAM_SIZE_ERROR.replace(/\{0\}/g, i.maxTeamSize);
 						}
 					}
     		  return ''; 

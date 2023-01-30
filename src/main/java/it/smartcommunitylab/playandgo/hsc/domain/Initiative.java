@@ -38,7 +38,7 @@ public class Initiative {
 	
 	private Double bonus;
 	private Double bonusThreshold;
-	private Integer minTeamSize;
+	private Integer maxTeamSize;
 	
 	private List<String> teamLeaderDomainList = new ArrayList<>();
 	private List<String> teamLeaderList = new ArrayList<>();
@@ -79,12 +79,6 @@ public class Initiative {
 	public void setBonusThreshold(Double bonusThreshold) {
 		this.bonusThreshold = bonusThreshold;
 	}
-	public Integer getMinTeamSize() {
-		return minTeamSize;
-	}
-	public void setMinTeamSize(Integer minTeamSize) {
-		this.minTeamSize = minTeamSize;
-	}
 	public String getType() {
 		return type;
 	}
@@ -102,5 +96,11 @@ public class Initiative {
 	}
 	public void setTeamLeaderList(List<String> teamLeaderList) {
 		this.teamLeaderList = teamLeaderList;
+	}
+	public Integer getMaxTeamSize() {
+		return maxTeamSize;
+	}
+	public void setMaxTeamSize(Integer maxTeamSize) {
+		this.maxTeamSize = maxTeamSize;
 	}
 }
