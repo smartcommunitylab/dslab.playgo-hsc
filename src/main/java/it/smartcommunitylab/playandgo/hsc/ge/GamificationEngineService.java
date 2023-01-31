@@ -113,5 +113,20 @@ public class GamificationEngineService {
 		}
 		return false;		
 	}
+	
+	public boolean changeCustomData(String playerId, String gameId, Map<String, Object> customData) {
+		try {
+			String content = JsonUtils.toJSON(customData);
+			String url = gamificationUrl + "/data/game/" + gameId + "/player/" + playerId;
+			ResponseEntity<String> entity = HTTPConnector.doBasicAuthenticationMethod(url, content, "application/json", 
+					"application/json", gamificationUser, gamificationPassword, HttpMethod.PUT);
+			if (entity.getStatusCode().is2xxSuccessful()) {
+				return true;
+			}
+		} catch (Exception e) {
+			logger.error(String.format("changeCustomData error: %s - %s - %s", gameId, playerId, e.getMessage()));
+		}
+		return false;		
+	}
 
 }
