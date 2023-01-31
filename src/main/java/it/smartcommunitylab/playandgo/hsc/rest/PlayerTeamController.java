@@ -124,8 +124,9 @@ public class PlayerTeamController {
 	}
 	
 	@PostMapping("/api/initiatives/{initiativeId}/player/subscribe")
-	public ResponseEntity<String> subscribeTeamMember(@PathVariable String initiativeId, @RequestParam String nickname) throws HSCError {
-		return ResponseEntity.ok(teamService.subscribeTeamMember(initiativeId, nickname));
+	public ResponseEntity<String> subscribeTeamMember(@PathVariable String initiativeId, 
+			@RequestParam String nickname, @RequestParam String teamId) throws HSCError {
+		return ResponseEntity.ok(teamService.subscribeTeamMember(initiativeId, nickname, teamId));
 	}
 	
 	@GetMapping("/api/initiatives/{initiativeId}/team/{teamId}/info")
@@ -155,6 +156,11 @@ public class PlayerTeamController {
 			@PathVariable String initiativeId, 
 			@PathVariable String teamId) throws HSCError {
 		return teamService.getPublicTeamInfo(initiativeId, teamId);
+	}
+	
+	@GetMapping("/api/initiatives/{initiativeId}/teams/public")
+	public List<PlayerTeam> getPublicTeamsInfo(@PathVariable String initiativeId) throws HSCError {
+		return teamService.getPublicTeamsInfo(initiativeId);
 	}
 
 	@GetMapping("/api/initiatives/{initiativeId}/team/{teamId}/my")

@@ -38,8 +38,9 @@ public class AdminController {
 	private PlayerTeamService teamService;
 	
 	@PostMapping("/api/admin/initiatives/{initiativeId}/player/subscribe")
-	public ResponseEntity<String> subscribeTeamMember(@PathVariable String initiativeId, @RequestParam String nickname) throws HSCError {
-		return ResponseEntity.ok(teamService.subscribeTeamMember(initiativeId, nickname));
+	public ResponseEntity<String> subscribeTeamMember(@PathVariable String initiativeId, 
+			@RequestParam String nickname, @RequestParam String teamId) throws HSCError {
+		return ResponseEntity.ok(teamService.subscribeTeamMember(initiativeId, nickname, teamId));
 	}
 	
 	@PostMapping("/api/admin/initiatives/{initiativeId}/player/unsubscribe")

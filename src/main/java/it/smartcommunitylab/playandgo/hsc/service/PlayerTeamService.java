@@ -542,7 +542,7 @@ public class PlayerTeamService {
 		return registered.contains(nickname);			
 	}
 	
-	public String subscribeTeamMember(String initiativeId, String nickname) throws HSCError {
+	public String subscribeTeamMember(String initiativeId, String nickname, String teamId) throws HSCError {
 		if(securityHelper.checkAPIRole() || isAdmin(engineService.getUserRoles())) {
 			Initiative initiative = getInitiative(initiativeId);
 			if (initiative == null) {
@@ -554,6 +554,9 @@ public class PlayerTeamService {
 					if(tm.getNickname().equals(nickname)) {
 						if(tm.isSubscribed()) {
 							throw new DataException("PLAYER_ALREADY_SUBSCRIBED");
+						}
+						if(!team.getId().equals(teamId)) {
+							throw new DataException("TEAM_NOT_CORRECT");
 						}
 						if(!gamificationEngineService.createPlayer(tm.getPlayerId(), initiative.getCampaign().getGameId(), false)) {
 							throw new DataException("GAMIFICATION-PLAYER");
@@ -597,6 +600,15 @@ public class PlayerTeamService {
 			throw new NotFoundException("NO_TEAM");
 		}
 		return getPublicTeamInfo(team);
+	}
+	
+	public List<PlayerTeam> getPublicTeamsInfo(String initiativeId) throws HSCError {
+		List<PlayerTeam> result = new ArrayList<>();
+		List<PlayerTeam> list = teamRepo.findByInitiativeId(initiativeId);
+		for(PlayerTeam team : list) {
+			result.add(getPublicTeamInfo(team));
+		}
+		return result;
 	}
 	
 	public PlayerTeam getMyTeamInfo(String initiativeId, String teamId) throws HSCError {
