@@ -262,7 +262,7 @@ public class PlayerTeamService {
 				throw new NotFoundException("NO_TEAM");
 			}
 
-			if (!existing.getOwner().equals(currentUser)) {
+			if (!isCampaignManager && !existing.getOwner().equals(currentUser)) {
 				// throw access exception
 				throw new OperationNotPermittedException("OWNER");
 			} 
