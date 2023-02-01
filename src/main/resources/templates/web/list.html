@@ -1,19 +1,17 @@
 <html xmlns:th="http://www.thymeleaf.org"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.thymeleaf.org"
-	th:with="lang=${#locale.language}" th:lang="${lang}">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.thymeleaf.org"
+  th:with="lang=${#locale.language}" th:lang="${lang}">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <!-- required libraries -->
-<script src="lib/axios.min.js"></script>
+<script src="../lib/axios.min.js"></script>
 <script type="text/javascript" th:inline="javascript">
     /*<![CDATA[*/
-      AUTH_ENDPOINT = [[${authEndpoint}]];
-      ISSUER_ENDPOINT = [[${issuerEndpoint}]];
-      CLIENT_ID = [[${clientId}]];
+      sessionStorage.access_token = [[${token}]];
       FIELD_REQUIRED = [[#{teammgmt.error_required}]];
       MAX_TEAM_SIZE_LABEL = [[#{initiativelist.max_team_size_label}]];
       BONUS_THRESHOLD_LABEL =[[#{initiativelist.bonus_threshold_label}]];
@@ -26,36 +24,9 @@
     
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet"/>
-  <link href="lib/vuetify.min.css" rel="stylesheet"/>
+  <link href="../lib/vuetify.min.css" rel="stylesheet"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"/>
-
-  <script type="text/javascript" th:inline="javascript">
-    /*<![CDATA[*/
-      if (location.hash && location.hash.length > 1) {
-          var queryString = location.hash.substring(1);
-          var params = {};
-          var regex = /([^&=]+)=([^&]*)/g, m;
-          while (m = regex.exec(queryString)) {
-            params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-          }
-          if (params['access_token'] && params['expires_in']) {
-            sessionStorage.access_token = params['access_token'];
-            sessionStorage.access_token_expires_in = new Date().getTime() + parseInt(params['expires_in'], 10) * 1000;
-            window.location.hash = '';
-            window.location.reload();
-          }
-      } else {
-        var token = sessionStorage.getItem('access_token');
-        expiresIn = sessionStorage.getItem('access_token_expires_in') || 0;
-        if (!token || expiresIn < new Date().getTime()) {
-          var redirect = window.location;
-          window.location.href = AUTH_ENDPOINT + '?response_type=token&client_id='+CLIENT_ID+'&redirect_uri=' + redirect;
-          delete sessionStorage.access_token;
-          delete sessionStorage.access_token_expires_in;
-        }
-      }
-      /*]]>*/
-    </script>    
+  
 </head>
 
 <body>
@@ -65,6 +36,7 @@
     <v-app-bar app >
       <v-toolbar-title th:text="#{initiativelist.title}">Initiatives</v-toolbar-title>
       <v-spacer></v-spacer>
+      <!--<v-btn plain th:text="#{teammgmt.title}" @click="go('teams')">Teams</v-btn>-->
       <v-btn icon>
         <v-icon @click="logout()">mdi-logout</v-icon>
       </v-btn>
@@ -72,7 +44,7 @@
     </v-app-bar> 
   
     <v-content> 
-		  <v-container>
+      <v-container>
         <v-simple-table>
           <template v-slot:default>
             <thead>
@@ -83,21 +55,21 @@
                 <th th:text="#{initiativelist.from}">From</th>
                 <th th:text="#{initiativelist.to}">To</th>
                 <th th:text="#{initiativelist.active}">Active</th>
-                <th th:text="#{initiativelist.cancreate}">Can create team</th>
-                <th th:text="#{initiativelist.canedit}">Can create team</th>
+                <!--<th th:text="#{initiativelist.cancreate}">Can create team</th>-->
+                <!--<th th:text="#{initiativelist.canedit}">Can create team</th>-->
                 <th></th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="initiative in initiatives" :key="initiative.initiativeId">
                 <td>{{initiative.initiativeId}}</td>
-                <td><a :href="'./web/'+initiative.type+'/'+initiative.initiativeId+ '/mgmt'">{{initiative.campaign.name.it}}</a></td>
+                <td><a :href="'./'+initiative.initiativeId+'/mgmt'">{{initiative.campaign.name.it}}</a></td>
                 <td>{{initiative.type}}</td>
                 <td>{{dateFormat(initiative.campaign.dateFrom)}}</td>  
                 <td>{{dateFormat(initiative.campaign.dateTo)}}</td>
                 <td><v-icon>{{initiative.campaign.active ? 'mdi-check': 'mdi-close-circle'}}</v-icon></td>
-                <td><v-btn @click="toggleCreate(initiative)" icon><v-icon>{{initiative.canCreate ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>
-                <td><v-btn @click="toggleEdit(initiative)" icon><v-icon>{{initiative.canEdit ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>
+                <!--<td><v-btn @click="toggleCreate(initiative)" icon><v-icon>{{initiative.canCreate ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>-->
+                <!--<td><v-btn @click="toggleEdit(initiative)" icon><v-icon>{{initiative.canEdit ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>-->
                 <td><v-btn @click="doEdit(initiative)" color="primary"><v-icon>mdi-pencil</v-icon></v-btn></td>
               </tr>
             </tbody>
@@ -120,7 +92,7 @@
                 	min="1" max="100" required></v-text-field>
               </v-col>
               <v-col cols="12">
-              	<span th:text="#{initiativelist.teamLeaderList}"></span>
+              	<!--<span th:text="#{initiativelist.teamLeaderList}"></span>-->
               	<v-chip-group>
               		<v-chip v-for="item in initiative.teamLeaderList" @click:close="removeTeamLeader(item)" :close="true">
               			{{item}}
@@ -132,7 +104,7 @@
               		v-model="teamLeader" @keydown.enter.prevent="enterTeamLeader()"></v-text-field>
               </v-col>
               <v-col cols="12">
-              	<span th:text="#{initiativelist.teamLeaderDomainList}"></span>
+              	<!--<span th:text="#{initiativelist.teamLeaderDomainList}"></span>-->
               	<v-chip-group>
               		<v-chip v-for="item in initiative.teamLeaderDomainList" @click:close="removeTeamLeaderDomain(item)" :close="true">
               			{{item}}
@@ -159,9 +131,9 @@
 </div>
 
 
-	<script src="lib/vue.min.js"></script>
-  <script src="lib/vuetify.min.js"></script>
-  <script src="lib/luxon.min.js"></script>
+  <script src="../lib/vue.min.js"></script>
+  <script src="../lib/vuetify.min.js"></script>
+  <script src="../lib/luxon.min.js"></script>
   <script>
     new Vue({
       el: '#app',
@@ -202,66 +174,68 @@
     	  },
       },
       methods: {
-    	  load() {
-    		    this.loading = true;
-  	        axios.get(`./api/initiatives`, {headers: {Authorization: 'Bearer '+ sessionStorage.access_token}}).then((data) => {
-  	        	this.initiatives = data.data;
- 	            this.loading = false;  	            	
- 	          });    		  
-    	  },
+        load() {
+            this.loading = true;
+            axios.get(`../api/initiatives`, {headers: {Authorization: 'Bearer '+ sessionStorage.access_token}}).then((data) => {
+              this.initiatives = data.data;
+              this.loading = false;                 
+            });         
+        },
         logout() {
               console.log('logout');
                delete sessionStorage.access_token;
-               delete sessionStorage.access_token_expires_in;
-               //window.location.href = ISSUER_ENDPOINT + '/logout?target=' + window.location.href; 
+               window.location.href = '../logout';
          },
          toggleCreate(initiative) {
              this.loading = true;
-             axios.put(`./api/initiatives/${initiative.initiativeId}/create/${!initiative.canCreate}`, {}, {headers: {Authorization: 'Bearer '+ sessionStorage.access_token}}).then((data) => {
-            	 initiative.canCreate = data.data.canCreate;
+             axios.put(`../api/initiatives/${initiative.initiativeId}/create/${!initiative.canCreate}`, {}, {headers: {Authorization: 'Bearer '+ sessionStorage.access_token}}).then((data) => {
+               initiative.canCreate = data.data.canCreate;
                this.loading = false;                 
              });         
          },
          toggleEdit(initiative) {
              this.loading = true;
-             axios.put(`./api/initiatives/${initiative.initiativeId}/edit/${!initiative.canEdit}`, {}, {headers: {Authorization: 'Bearer '+ sessionStorage.access_token}}).then((data) => {
+             axios.put(`../api/initiatives/${initiative.initiativeId}/edit/${!initiative.canEdit}`, {}, {headers: {Authorization: 'Bearer '+ sessionStorage.access_token}}).then((data) => {
                initiative.canEdit = data.data.canEdit;
                this.loading = false;                 
              });         
          },
          doEdit(initiative) {
-        	 this.initiative = Object.assign({}, initiative);
-        	 this.editDialog = true;
+           this.initiative = Object.assign({}, initiative);
+           this.editDialog = true;
          },
          
          saveInitiative() {
              this.loading = true;
              const i = Object.assign({}, this.initiative); 
              console.log(i);
-             axios.put(`./api/initiatives/${this.initiative.initiativeId}`, i, {headers: {Authorization: 'Bearer '+ sessionStorage.access_token}}).then((data) => {
+             axios.put(`../api/initiatives/${this.initiative.initiativeId}`, i, {headers: {Authorization: 'Bearer '+ sessionStorage.access_token}}).then((data) => {
                this.editDialog = false;
                this.load();
              });         
          },
          dateFormat(ts) {
-        	 return luxon.DateTime.fromMillis(ts).toFormat('dd/LL/yyyy');
+           return luxon.DateTime.fromMillis(ts).toFormat('dd/LL/yyyy');
          },
-				removeTeamLeader(item) {
-					let idx = this.initiative.teamLeaderList.indexOf(item);
-    			this.initiative.teamLeaderList.splice(idx, 1);
-				},
-				enterTeamLeader() {
-					this.initiative.teamLeaderList.push(this.teamLeader);
-					this.teamLeader = null;
-				},
-				removeTeamLeaderDomain(item) {
-					let idx = this.initiative.teamLeaderDomainList.indexOf(item);
-    			this.initiative.teamLeaderDomainList.splice(idx, 1);
-				},
-				enterTeamLeaderDomain() {
-					this.initiative.teamLeaderDomainList.push(this.teamLeaderDomain);
-					this.teamLeaderDomain = null;
-				}				         
+        removeTeamLeader(item) {
+          let idx = this.initiative.teamLeaderList.indexOf(item);
+          this.initiative.teamLeaderList.splice(idx, 1);
+        },
+        enterTeamLeader() {
+          this.initiative.teamLeaderList.push(this.teamLeader);
+          this.teamLeader = null;
+        },
+        removeTeamLeaderDomain(item) {
+          let idx = this.initiative.teamLeaderDomainList.indexOf(item);
+          this.initiative.teamLeaderDomainList.splice(idx, 1);
+        },
+        enterTeamLeaderDomain() {
+          this.initiative.teamLeaderDomainList.push(this.teamLeaderDomain);
+          this.teamLeaderDomain = null;
+        },      
+        go(page) {
+          window.location.href = './' + page;
+        }
       }
     })
   </script>

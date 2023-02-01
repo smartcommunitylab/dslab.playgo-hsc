@@ -16,14 +16,16 @@
 
 package it.smartcommunitylab.playandgo.hsc.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.ModelAndView;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
+import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
 import it.smartcommunitylab.playandgo.hsc.service.PlayerTeamService;
 
 /**
@@ -34,53 +36,73 @@ import it.smartcommunitylab.playandgo.hsc.service.PlayerTeamService;
 public class WebController {
 
 	@Autowired
+	private SecurityHelper helper;
+	
+	@Autowired
 	private PlayerTeamService teamService;
-    @Value("${spring.security.oauth2.client.provider.oauthprovider.authorization-uri}")
-    private String authUri;
-    @Value("${spring.security.oauth2.client.provider.oauthprovider.issuer-uri}")
-    private String issuerUri;
-    @Value("${spring.security.oauth2.client.registration.oauthprovider.client-id}")
-    private String clientId;
 
-	@GetMapping("/web/{type}/{initiative}")
+	@GetMapping("/")
 	public 
-	ModelAndView webBoard(@PathVariable String type, @PathVariable String initiative) {
-		ModelAndView model = new ModelAndView("web/"+ type);
-		Initiative obj = teamService.getInitiative(initiative);
-		model.addObject("initiative", obj);
-		return model;
+	ModelAndView root() {
+		return new ModelAndView("redirect:/web");
 	}
 
 	@GetMapping("/web")
 	public 
 	ModelAndView webMgmtList() {
-		ModelAndView model = new ModelAndView("web/list");
-		model.addObject("authEndpoint", authUri);
-		model.addObject("issuerEndpoint", issuerUri);
-		model.addObject("clientId", clientId);
-		return model;
+		List<Initiative> list;
+		try {
+			list = teamService.getInitativesForManager();
+			ModelAndView model = new ModelAndView(list.size() > 0 ? "redirect:/web/initiatives" : "redirect:/web/teams");
+			return model;
+		} catch (Exception e) {
+			return new ModelAndView("redirect:/logout");
+		}
 	}
-
-	@GetMapping("/web/{type}/{initiative}/mgmt")
-	public 
-	ModelAndView webMgmt(@PathVariable String type, @PathVariable String initiative) {
-		ModelAndView model = new ModelAndView("web/mgmt"+type);
-		Initiative obj = teamService.getInitiative(initiative);
-		model.addObject("authEndpoint", authUri);
-		model.addObject("issuerEndpoint", issuerUri);
-		model.addObject("clientId", clientId);
-		model.addObject("initiative", obj);
-		return model;
-	}
-	
-	@GetMapping("/web/team/mgmt")
+	@GetMapping("/web/teams")
 	public 
 	ModelAndView webTeamMgmt() {
 		ModelAndView model = new ModelAndView("web/teammgmthsc");
-		model.addObject("authEndpoint", authUri);
-		model.addObject("issuerEndpoint", issuerUri);
-		model.addObject("clientId", clientId);
+		try {
+			model.addObject("token", getToken());
+		} catch (Exception e) {
+			return new ModelAndView("redirect:/logout");
+		}
 		return model;
+	}
+	@GetMapping("/web/initiatives")
+	public 
+	ModelAndView weInitiativeMgmt() {
+		ModelAndView model = new ModelAndView("web/list");
+		try {
+			model.addObject("token", getToken());
+		} catch (Exception e) {
+			return new ModelAndView("redirect:/logout");
+		}
+		return model;
+	}
+	@GetMapping("/web/{initiativeId}/mgmt")
+	public 
+	ModelAndView webMgmt(@PathVariable String initiativeId) {
+		ModelAndView model = new ModelAndView("web/mgmthsc");
+		Initiative obj = teamService.getInitiative(initiativeId);
+		try {
+			model.addObject("token", getToken());
+			model.addObject("initiative", obj);
+		} catch (Exception e) {
+			return new ModelAndView("redirect:/logout");
+		}
+		return model;
+	}
+	
+	@GetMapping("/web/logout")
+	public 
+	ModelAndView logout() {
+		return new ModelAndView("redirect:/");
+	}
+	
+	private String getToken() {
+		return helper.getCurrentToken();
 	}
 	
 }
