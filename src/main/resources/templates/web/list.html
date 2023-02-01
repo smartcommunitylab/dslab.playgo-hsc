@@ -83,8 +83,8 @@
                 <th th:text="#{initiativelist.from}">From</th>
                 <th th:text="#{initiativelist.to}">To</th>
                 <th th:text="#{initiativelist.active}">Active</th>
-                <th th:text="#{initiativelist.cancreate}">Can create team</th>
-                <th th:text="#{initiativelist.canedit}">Can create team</th>
+                <!--<th th:text="#{initiativelist.cancreate}">Can create team</th>-->
+                <!--<th th:text="#{initiativelist.canedit}">Can create team</th>-->
                 <th></th>
               </tr>
             </thead>
@@ -96,8 +96,8 @@
                 <td>{{dateFormat(initiative.campaign.dateFrom)}}</td>  
                 <td>{{dateFormat(initiative.campaign.dateTo)}}</td>
                 <td><v-icon>{{initiative.campaign.active ? 'mdi-check': 'mdi-close-circle'}}</v-icon></td>
-                <td><v-btn @click="toggleCreate(initiative)" icon><v-icon>{{initiative.canCreate ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>
-                <td><v-btn @click="toggleEdit(initiative)" icon><v-icon>{{initiative.canEdit ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>
+                <!--<td><v-btn @click="toggleCreate(initiative)" icon><v-icon>{{initiative.canCreate ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>-->
+                <!--<td><v-btn @click="toggleEdit(initiative)" icon><v-icon>{{initiative.canEdit ? 'mdi-check': 'mdi-close-circle'}}</v-icon></v-btn></td>-->
                 <td><v-btn @click="doEdit(initiative)" color="primary"><v-icon>mdi-pencil</v-icon></v-btn></td>
               </tr>
             </tbody>
@@ -120,7 +120,7 @@
                 	min="1" max="100" required></v-text-field>
               </v-col>
               <v-col cols="12">
-              	<span th:text="#{initiativelist.teamLeaderList}"></span>
+              	<!--<span th:text="#{initiativelist.teamLeaderList}"></span>-->
               	<v-chip-group>
               		<v-chip v-for="item in initiative.teamLeaderList" @click:close="removeTeamLeader(item)" :close="true">
               			{{item}}
@@ -132,7 +132,7 @@
               		v-model="teamLeader" @keydown.enter.prevent="enterTeamLeader()"></v-text-field>
               </v-col>
               <v-col cols="12">
-              	<span th:text="#{initiativelist.teamLeaderDomainList}"></span>
+              	<!--<span th:text="#{initiativelist.teamLeaderDomainList}"></span>-->
               	<v-chip-group>
               		<v-chip v-for="item in initiative.teamLeaderDomainList" @click:close="removeTeamLeaderDomain(item)" :close="true">
               			{{item}}
