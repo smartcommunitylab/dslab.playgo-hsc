@@ -27,6 +27,7 @@ import org.springframework.web.servlet.ModelAndView;
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
 import it.smartcommunitylab.playandgo.hsc.security.SecurityHelper;
 import it.smartcommunitylab.playandgo.hsc.service.PlayerTeamService;
+import it.smartcommunitylab.playandgo.hsc.service.UserConsentService;
 
 /**
  * @author raman
@@ -40,6 +41,9 @@ public class WebController {
 	
 	@Autowired
 	private PlayerTeamService teamService;
+	
+	@Autowired
+	UserConsentService userConsentService;
 
 	@GetMapping("/")
 	public 
@@ -59,9 +63,23 @@ public class WebController {
 			return new ModelAndView("redirect:/logout");
 		}
 	}
+	@GetMapping("/web/consent")
+	public 
+	ModelAndView webConsent() {
+		ModelAndView model = new ModelAndView("web/consentform");
+		try {
+			model.addObject("token", getToken());
+		} catch (Exception e) {
+			return new ModelAndView("redirect:/logout");
+		}
+		return model;
+	}	
 	@GetMapping("/web/teams")
 	public 
 	ModelAndView webTeamMgmt() {
+		if(!userConsentService.existConsent()) {
+			return new ModelAndView("redirect:/web/consent");
+		}
 		ModelAndView model = new ModelAndView("web/teammgmthsc");
 		try {
 			model.addObject("token", getToken());
@@ -73,7 +91,10 @@ public class WebController {
 	@GetMapping("/web/initiatives")
 	public 
 	ModelAndView weInitiativeMgmt() {
-		ModelAndView model = new ModelAndView("web/list");
+		if(!userConsentService.existConsent()) {
+			return new ModelAndView("redirect:/web/consent");
+		}
+		ModelAndView model = new ModelAndView("web/list"); 
 		try {
 			model.addObject("token", getToken());
 		} catch (Exception e) {
@@ -84,6 +105,9 @@ public class WebController {
 	@GetMapping("/web/{initiativeId}/mgmt")
 	public 
 	ModelAndView webMgmt(@PathVariable String initiativeId) {
+		if(!userConsentService.existConsent()) {
+			return new ModelAndView("redirect:/web/consent");
+		}		
 		ModelAndView model = new ModelAndView("web/mgmthsc");
 		Initiative obj = teamService.getInitiative(initiativeId);
 		try {
