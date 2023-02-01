@@ -17,6 +17,15 @@ public class UserConsentService {
 	@Autowired
 	private SecurityHelper securityHelper;
 	
+	public boolean existConsent() {
+		String email = securityHelper.getCurrentPreferredUsername();
+		UserConsent consent = userConsentRepository.findByEmail(email);
+		if((consent != null) && consent.isPrivacy() && consent.isTermOfConditions()) {
+			return true;
+		}
+		return false;
+	}
+	
 	public UserConsent getUserConsent() {
 		String email = securityHelper.getCurrentPreferredUsername();
 		return  userConsentRepository.findByEmail(email);

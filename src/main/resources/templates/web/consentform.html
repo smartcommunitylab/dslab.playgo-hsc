@@ -1,0 +1,103 @@
+<html xmlns:th="http://www.thymeleaf.org"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.thymeleaf.org"
+  th:with="lang=${#locale.language}" th:lang="${lang}">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- required libraries -->
+<script src="../lib/axios.min.js"></script>
+<script type="text/javascript" th:inline="javascript">
+    /*<![CDATA[*/
+      sessionStorage.access_token = [[${token}]];
+      /*]]>*/
+    </script>
+    
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet"/>
+  <link href="../lib/vuetify.min.css" rel="stylesheet"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"/>
+  
+</head>
+
+<body>
+
+<div id="app">
+  <v-app>
+  	<div class="d-flex align-center flex-column">
+  		<v-progress-linear :active="loading" :indeterminate="loading"  absolute bottom></v-progress-linear>   
+    	<v-card max-width="90%" :loading="loading">
+    		<v-card-title>Termini e condizioni</v-card-title>
+    		<v-card-text>
+<p>    		
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse pellentesque tempor metus ac imperdiet. Maecenas dignissim ac ipsum vitae tempus. Nullam vitae maximus metus. Ut venenatis fermentum leo, sit amet tristique enim porttitor in. Praesent est eros, venenatis quis egestas sit amet, pulvinar eget lorem. Sed molestie feugiat dictum. Duis imperdiet lorem enim, eu efficitur risus egestas malesuada. Sed aliquam molestie vehicula. Donec et quam tincidunt, auctor orci id, luctus sem. Donec nunc tortor, porta nec posuere ac, cursus quis leo. Morbi velit odio, finibus id felis a, elementum auctor metus. Cras rutrum leo tellus. Cras sagittis interdum condimentum. Phasellus elementum viverra enim, ut venenatis leo mattis quis. Morbi varius fermentum ex, malesuada mattis sapien vehicula at.
+</p>
+<p>
+Mauris ut dui pretium, rhoncus erat eu, interdum dolor. Ut id volutpat nisi. Ut gravida fermentum venenatis. Quisque eros est, auctor nec sem eget, iaculis lacinia neque. Nullam facilisis rutrum semper. Curabitur nec risus pretium, dapibus ipsum eu, viverra lacus. Sed volutpat lacus id sapien sagittis, sit amet cursus nisi feugiat. Suspendisse a gravida magna. Nunc risus lacus, porta eget mauris consequat, egestas faucibus sapien. Donec ut justo fermentum neque porta tristique a in neque. Proin vitae erat sagittis, tempor purus non, molestie dolor. In hac habitasse platea dictumst. Integer velit dolor, tempus quis pulvinar in, pellentesque at erat.
+</p>
+<p>
+Aenean sed vehicula est. Donec dictum, lacus ultrices eleifend vestibulum, est nunc sollicitudin ex, non luctus erat libero ac nunc. Cras a felis a erat porttitor feugiat vitae et tellus. Maecenas eget diam convallis, pretium nunc ac, scelerisque lorem. Aenean a velit iaculis, vulputate est eu, ultrices enim. Vivamus et commodo massa, eu faucibus ante. Donec convallis pharetra sem id vestibulum. Fusce aliquet nulla id mi laoreet egestas. Donec mattis bibendum dui quis condimentum. Sed pharetra tincidunt purus non gravida. Phasellus luctus nulla quis consequat mollis. Maecenas iaculis sed tellus nec interdum.
+</p>
+<p>
+Sed vehicula scelerisque ultricies. Morbi accumsan dolor quis orci elementum feugiat. Nunc luctus arcu eu ligula placerat gravida. Vestibulum vitae nunc tincidunt, tincidunt nibh eu, posuere nunc. Nam et enim eu arcu laoreet aliquet. Sed eleifend tempor ligula sit amet pretium. Nullam sed metus ex.
+</p>
+<p>
+Aliquam vitae dolor et odio volutpat maximus pellentesque aliquet diam. Cras venenatis tempor libero, quis pretium odio malesuada et. Nunc maximus metus eget nulla blandit, at tincidunt eros ullamcorper. Nam at interdum dolor, ut luctus urna. Nullam elementum sapien rutrum velit gravida, non lobortis lectus pulvinar. Vivamus ultrices massa sed nulla volutpat, in rhoncus quam eleifend. Praesent venenatis bibendum est et consectetur. Nulla in fringilla sapien. Vivamus ornare gravida nisi, vel euismod nisi lobortis ut. Aliquam sed euismod libero. Nam tristique magna eu sem auctor dignissim. Vestibulum venenatis pulvinar accumsan. Vivamus ut sollicitudin justo. Sed placerat eros non nulla consectetur, et consequat dui cursus.
+</p> 
+    		</v-card-text>
+    		<v-card-text>
+    			<v-row>
+						<v-checkbox v-model="privacy" :label="`Privacy`"></v-checkbox>    			
+						<v-checkbox v-model="termOfConditions" :label="`Termini e condizioni`"></v-checkbox>    			
+    			</v-row>
+    		</v-card-text>
+    		<v-card-actions>
+    			<v-btn :disabled="!privacy || !termOfConditions" text @click="send">Invia</v-btn>
+    		</v-card-actions>
+    	</v-card > 
+  	</div>
+  </v-app>
+</div>
+
+  <script src="../lib/vue.min.js"></script>
+  <script src="../lib/vuetify.min.js"></script>
+  <script src="../lib/luxon.min.js"></script>
+  <script>
+    var token = sessionStorage.access_token;
+    var conf = {headers: {
+    	Authorization: `Bearer ${token}`
+    }};  
+    new Vue({
+      el: '#app',
+      vuetify: new Vuetify(),
+      data () {
+    	  return {
+    		  loading: false,
+    		  privacy: false,
+    		  termOfConditions: false
+    	  }
+      },
+      created() {
+    	  console.log('Initializing');
+      },
+      computed: {
+      },
+      methods: {
+        send() {
+            this.loading = true;
+            axios.put(`../api/user/consent?privacy=${this.privacy}&termOfConditions=${this.termOfConditions}`, {}, conf).then((data) => {
+              this.loading = false;                
+	            window.open('../web', '_self');                                  
+            }).catch(err => {
+          		console.log(err);
+	            this.loading = false; 
+          	});         
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>
