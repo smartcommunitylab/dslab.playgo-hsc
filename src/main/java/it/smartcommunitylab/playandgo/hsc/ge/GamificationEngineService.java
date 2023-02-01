@@ -4,7 +4,7 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import it.smartcommunitylab.playandgo.hsc.util.HTTPConnector;
 import it.smartcommunitylab.playandgo.hsc.util.JsonUtils;
@@ -31,21 +29,8 @@ public class GamificationEngineService {
 	@Value("${gamification.password}")
 	private String gamificationPassword;
 
-	@Value("${gamification.secretKey1}")
-	private String secretKey1;
-	
-	@Value("${gamification.secretKey2}")
-	private String secretKey2;
-	
 	ObjectMapper mapper = new ObjectMapper();
-	
-	EncryptDecrypt cryptUtils;
-	
-	@PostConstruct
-	public void init() throws Exception {
-		cryptUtils = new EncryptDecrypt(secretKey1, secretKey2);
-	}
-	
+		
 	public boolean createPlayer(String playerId, String gameId, boolean isGroup) {
 		try {
 			Map<String, Object> data = new HashMap<>();

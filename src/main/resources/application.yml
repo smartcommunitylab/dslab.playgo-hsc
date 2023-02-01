@@ -20,6 +20,11 @@ spring:
             authorization-grant-type: client_credentials
             client-id:  ${AAC_CLIENT_ID:}
             client-secret:  ${AAC_CLIENT_SECRET:}
+          aac: 
+            client-id:  ${AAC_CLIENT_ID:}
+            client-secret:  ${AAC_CLIENT_SECRET:}
+            authorization-grant-type: authorization_code
+            provider: oauthprovider
         provider:
           oauthprovider:
             token-uri: ${AAC_TOKEN_URI:}

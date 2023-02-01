@@ -18,9 +18,15 @@ package it.smartcommunitylab.playandgo.hsc.security;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
@@ -34,45 +40,50 @@ public class SecurityHelper {
     
 	@Value("${spring.security.oauth2.client.registration.oauthprovider.client-id}")
     private String jwtAudience;
+	@Autowired
+	private OAuth2AuthorizedClientService authorizedClientService;
+	@Autowired
+	private JwtDecoder decoder;
 	
 	public String getCurrentToken() {
-		JwtAuthenticationToken authentication = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-		Jwt principal = (Jwt) authentication.getPrincipal();
+		Jwt principal = getJwt();
 		return principal.getTokenValue();
 	}
 
 
 	public String getCurrentSubject() {
-		JwtAuthenticationToken authentication = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-		Jwt principal = (Jwt) authentication.getPrincipal();
+		Jwt principal = getJwt();
 		String subject = principal.getSubject();
 		return subject;
 	}
 	
-	public String getGivenName() {
-		JwtAuthenticationToken authentication = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-		Jwt principal = (Jwt) authentication.getPrincipal();
-		return principal.getClaimAsString("given_name");		
-	}
-	
-	public String getFamilyName() {
-		JwtAuthenticationToken authentication = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-		Jwt principal = (Jwt) authentication.getPrincipal();
-		return principal.getClaimAsString("family_name");		
-	}
-	
 	public String getCurrentPreferredUsername() {
-		JwtAuthenticationToken authentication = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-		Jwt principal = (Jwt) authentication.getPrincipal();
+		Jwt principal = getJwt();
 		String subject = principal.getClaimAsString("preferred_username");
 		return subject;
 	}
 	
 	public boolean checkAPIRole() {
-		JwtAuthenticationToken authentication = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-		Jwt principal = (Jwt) authentication.getPrincipal();
+		Jwt principal = getJwt();
 		return principal.getAudience().contains(jwtAudience);
 	}
 
+	private Jwt getJwt() {
+		if (SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken) {
+			return (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		} else {
+			OAuth2AuthenticationToken token  = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+			OAuth2AuthorizedClient client = authorizedClientService
+				      .loadAuthorizedClient(
+				        token.getAuthorizedClientRegistrationId(), 
+				          token.getName());
+			if (client == null) {
+				throw new SecurityException();
+			}
+			OAuth2AccessToken t = client.getAccessToken();
+			return decoder.decode(t.getTokenValue());
+		}
+
+	}
 	
 }
