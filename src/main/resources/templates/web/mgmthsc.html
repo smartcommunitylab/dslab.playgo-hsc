@@ -10,11 +10,10 @@
 
 
 <!-- required libraries -->
-<script src="../../../lib/axios.min.js"></script>
+<script src="../../lib/axios.min.js"></script>
 <script type="text/javascript" th:inline="javascript">
     /*<![CDATA[*/
-      AUTH_ENDPOINT = [[${authEndpoint}]] ;
-      CLIENT_ID = [[${clientId}]];
+    	sessionStorage.access_token = [[${token}]];
       INITIATIVE = [[${initiative}]];
       FIELD_REQUIRED = [[#{teammgmt.error_required}]];
       TEAM_SIZE_LABEL = [[#{teammgmt.hsc.team_size_label}]];
@@ -28,22 +27,9 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet"/>
   
-  <link href="../../../lib/vuetify.min.css" rel="stylesheet"/>
+  <link href="../../lib/vuetify.min.css" rel="stylesheet"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"/>
     
-    <script type="text/javascript" th:inline="javascript">
-    /*<![CDATA[*/
-        var token = sessionStorage.getItem('access_token');
-        expiresIn = sessionStorage.getItem('access_token_expires_in') || 0;
-        if (!token || expiresIn < new Date().getTime()) {
-          var redirect = window.location.href;
-          redirect = redirect.substr(0,redirect.indexOf('/web/')+4);
-          window.location.href = AUTH_ENDPOINT + '?response_type=token&client_id='+CLIENT_ID+'&redirect_uri=' + redirect;
-          delete sessionStorage.access_token;
-          delete sessionStorage.access_token_expires_in;
-        }
-      /*]]>*/
-    </script>    
 </head>
 
 <body>
@@ -85,7 +71,6 @@
 								</v-avatar>					    
 					    </v-list-item>
 					    <v-card-actions>
-                <v-btn color="primary" text @click="view(team)" th:text="#{teammgmt.btn_view}">View Board</v-btn>
 					      <v-btn v-if="isAdmin && !unauthorized && !loading" color="primary" text @click="editTeam(team)" th:text="#{teammgmt.btn_edit}">Edit</v-btn>
 					    </v-card-actions>					    
 					  </v-card>
@@ -175,8 +160,8 @@
 </div>
 
 
-	<script src="../../../lib/vue.min.js"></script>
-  <script src="../../../lib/vuetify.min.js"></script>
+	<script src="../../lib/vue.min.js"></script>
+  <script src="../../lib/vuetify.min.js"></script>
   <script>
     var token = sessionStorage.access_token;
     var conf = {headers: {
@@ -261,7 +246,7 @@
     		  if (val && val.length > 1) {
              clearTimeout(this.timerId);
              this.timerId = setTimeout(() => {
-               axios.get(`../../../api/initiatives/${this.initiativeId}/team/candidates?size=50&txt=${!!val ? val :''}`, conf).then((data) => {
+               axios.get(`../../api/initiatives/${this.initiativeId}/team/candidates?size=50&txt=${!!val ? val :''}`, conf).then((data) => {
                   var remote = data.data.content.map(c => {
                     c.disabled = c.subscribed && (!this.currTeam || this.currTeam.members.some(m => m.nickname == c.nickname));
                     return c;
@@ -282,9 +267,9 @@
     	  },
     	  load() {
     		    this.loading = true;
-	          axios.get(`../../../api/initiatives/${this.initiativeId}/admin`, conf).then((admin) => {
+	          axios.get(`../../api/initiatives/${this.initiativeId}/admin`, conf).then((admin) => {
 	        	    this.isAdmin = admin.data;
-	              axios.get(`../../../api/initiatives/${this.initiativeId}/teams`, conf).then((data) => {
+	              axios.get(`../../api/initiatives/${this.initiativeId}/teams`, conf).then((data) => {
 	                  this.teams = data.data;
 										this.teams.forEach(t => {
 											let now = Date.now();
@@ -340,14 +325,14 @@
     		  
     		  var copy = Object.assign({}, this.currTeam);
           this.loading = true;
- 	        axios.post(`../../../api/initiatives/${this.initiativeId}/team`, copy, conf)
+ 	        axios.post(`../../api/initiatives/${this.initiativeId}/team`, copy, conf)
  	        .then((data) => {
 	            this.createDialogConfirm = false;                  
  	            this.dialog = false;
  	            if (this.avatar) {
  	            	let formData = new FormData();
 	              formData.append("data", this.avatar);
- 	            	axios.post(`../../../api/team/${data.data.id}/avatar`, formData, conf)
+ 	            	axios.post(`../../api/team/${data.data.id}/avatar`, formData, conf)
  	            	.then((res) => {
  	            		this.load();
  	            	})
@@ -367,14 +352,14 @@
           });
     	  },
     	  view(team) {
-    		  window.open(`../../../web/hsc/${this.initiativeId}`, '_blank');
+    		  window.open(`../../web/hsc/${this.initiativeId}`, '_blank');
     	  },
     	  deleteTeam(team) {
     		  this.currTeam = team;
     		  this.deleteDialog = true;    		 
     	  },
     	  confirmDelete() {
-              axios.delete(`../../../api/initiatives/${this.initiativeId}/team/${this.currTeam.id}`, conf).then((data) => {
+              axios.delete(`../../api/initiatives/${this.initiativeId}/team/${this.currTeam.id}`, conf).then((data) => {
                   this.deleteDialog = false;
                   this.load();
               });

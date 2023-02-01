@@ -36,7 +36,7 @@
     <v-app-bar app >
       <v-toolbar-title th:text="#{initiativelist.title}">Initiatives</v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn plain th:text="#{teammgmt.title}" @click="go('teams')">Teams</v-btn>
+      <!--<v-btn plain th:text="#{teammgmt.title}" @click="go('teams')">Teams</v-btn>-->
       <v-btn icon>
         <v-icon @click="logout()">mdi-logout</v-icon>
       </v-btn>
@@ -63,7 +63,7 @@
             <tbody>
               <tr v-for="initiative in initiatives" :key="initiative.initiativeId">
                 <td>{{initiative.initiativeId}}</td>
-                <td><a :href="'./web/'+initiative.type+'/'+initiative.initiativeId+ '/mgmt'">{{initiative.campaign.name.it}}</a></td>
+                <td><a :href="'./'+initiative.initiativeId+'/mgmt'">{{initiative.campaign.name.it}}</a></td>
                 <td>{{initiative.type}}</td>
                 <td>{{dateFormat(initiative.campaign.dateFrom)}}</td>  
                 <td>{{dateFormat(initiative.campaign.dateTo)}}</td>

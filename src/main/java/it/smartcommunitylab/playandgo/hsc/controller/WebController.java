@@ -21,6 +21,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.ModelAndView;
 
 import it.smartcommunitylab.playandgo.hsc.domain.Initiative;
@@ -61,7 +62,7 @@ public class WebController {
 	@GetMapping("/web/teams")
 	public 
 	ModelAndView webTeamMgmt() {
-		ModelAndView model = new ModelAndView("web/teammgmt");
+		ModelAndView model = new ModelAndView("web/teammgmthsc");
 		try {
 			model.addObject("token", getToken());
 		} catch (Exception e) {
@@ -75,6 +76,19 @@ public class WebController {
 		ModelAndView model = new ModelAndView("web/list");
 		try {
 			model.addObject("token", getToken());
+		} catch (Exception e) {
+			return new ModelAndView("redirect:/logout");
+		}
+		return model;
+	}
+	@GetMapping("/web/{initiativeId}/mgmt")
+	public 
+	ModelAndView webMgmt(@PathVariable String initiativeId) {
+		ModelAndView model = new ModelAndView("web/mgmthsc");
+		Initiative obj = teamService.getInitiative(initiativeId);
+		try {
+			model.addObject("token", getToken());
+			model.addObject("initiative", obj);
 		} catch (Exception e) {
 			return new ModelAndView("redirect:/logout");
 		}
