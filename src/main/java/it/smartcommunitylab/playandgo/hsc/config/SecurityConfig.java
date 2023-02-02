@@ -79,7 +79,6 @@ public class SecurityConfig  {
 		        .anyRequest().authenticated()
 		        .and().oauth2Login()
 		        .and().logout().logoutSuccessUrl("/");
-
     		 return http.build();
         }
     }
