@@ -68,7 +68,7 @@ public class SecurityHelper {
 		return principal.getAudience().contains(jwtAudience);
 	}
 
-	private Jwt getJwt() {
+	private Jwt getJwt() throws SecurityException {
 		if (SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken) {
 			return (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		} else {

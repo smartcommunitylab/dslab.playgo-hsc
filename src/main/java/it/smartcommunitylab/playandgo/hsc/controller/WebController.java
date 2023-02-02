@@ -77,46 +77,46 @@ public class WebController {
 	@GetMapping("/web/teams")
 	public 
 	ModelAndView webTeamMgmt() {
-		if(!userConsentService.existConsent()) {
-			return new ModelAndView("redirect:/web/consent");
-		}
-		ModelAndView model = new ModelAndView("web/teammgmthsc");
 		try {
+			if(!userConsentService.existConsent()) {
+				return new ModelAndView("redirect:/web/consent");
+			}
+			ModelAndView model = new ModelAndView("web/teammgmthsc");
 			model.addObject("token", getToken());
+			return model;
 		} catch (Exception e) {
 			return new ModelAndView("redirect:/logout");
 		}
-		return model;
 	}
 	@GetMapping("/web/initiatives")
 	public 
 	ModelAndView weInitiativeMgmt() {
-		if(!userConsentService.existConsent()) {
-			return new ModelAndView("redirect:/web/consent");
-		}
-		ModelAndView model = new ModelAndView("web/list"); 
 		try {
+			if(!userConsentService.existConsent()) {
+				return new ModelAndView("redirect:/web/consent");
+			}
+			ModelAndView model = new ModelAndView("web/list"); 
 			model.addObject("token", getToken());
+			return model;
 		} catch (Exception e) {
 			return new ModelAndView("redirect:/logout");
 		}
-		return model;
 	}
 	@GetMapping("/web/{initiativeId}/mgmt")
 	public 
 	ModelAndView webMgmt(@PathVariable String initiativeId) {
-		if(!userConsentService.existConsent()) {
-			return new ModelAndView("redirect:/web/consent");
-		}		
-		ModelAndView model = new ModelAndView("web/mgmthsc");
-		Initiative obj = teamService.getInitiative(initiativeId);
 		try {
+			if(!userConsentService.existConsent()) {
+				return new ModelAndView("redirect:/web/consent");
+			}		
+			ModelAndView model = new ModelAndView("web/mgmthsc");
+			Initiative obj = teamService.getInitiative(initiativeId);
 			model.addObject("token", getToken());
 			model.addObject("initiative", obj);
+			return model;
 		} catch (Exception e) {
 			return new ModelAndView("redirect:/logout");
 		}
-		return model;
 	}
 	
 	@GetMapping("/web/logout")
