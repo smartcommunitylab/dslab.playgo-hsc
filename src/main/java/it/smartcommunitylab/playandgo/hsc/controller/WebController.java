@@ -119,11 +119,11 @@ public class WebController {
 		}
 	}
 	
-	@GetMapping("/web/logout")
-	public 
-	ModelAndView logout() {
-		return new ModelAndView("redirect:/");
-	}
+//	@GetMapping("/web/logout")
+//	public 
+//	ModelAndView logout() {
+//		return new ModelAndView("redirect:/");
+//	}
 	
 	private String getToken() {
 		return helper.getCurrentToken();

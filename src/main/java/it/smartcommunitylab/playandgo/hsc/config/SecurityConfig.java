@@ -1,11 +1,14 @@
 package it.smartcommunitylab.playandgo.hsc.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -15,6 +18,7 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 import it.smartcommunitylab.playandgo.hsc.security.JwtAudienceValidator;
 
@@ -27,6 +31,9 @@ public class SecurityConfig  {
 
     @Value("${spring.security.oauth2.client.registration.oauthprovider.client-id}")
     private String jwtAudience;
+    
+    @Autowired
+    private ClientRegistrationRepository clientRegistrationRepository;
 
     @Configuration
     @Order(1)
@@ -78,11 +85,23 @@ public class SecurityConfig  {
 		            ).permitAll()
 		        .anyRequest().authenticated()
 		        .and().oauth2Login()
-		        .and().logout().logoutSuccessUrl("/");
+		        .and().logout(logout -> {
+		        	logout.logoutSuccessHandler(oidcLogoutSuccessHandler());	
+		        });
     		 return http.build();
         }
     }
     
+    private LogoutSuccessHandler oidcLogoutSuccessHandler() {
+		OidcClientInitiatedLogoutSuccessHandler oidcLogoutSuccessHandler =
+				new OidcClientInitiatedLogoutSuccessHandler(this.clientRegistrationRepository);
+
+		// Sets the location that the End-User's User Agent will be redirected to
+		// after the logout has been performed at the Provider
+		oidcLogoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}/web");
+
+		return oidcLogoutSuccessHandler;
+	}    
     /*
      * JWT decoder with audience validation
      */

@@ -25,11 +25,10 @@ spring:
             client-secret:  ${AAC_CLIENT_SECRET:}
             authorization-grant-type: authorization_code
             provider: oauthprovider
+            scope: openid,profile,email
         provider:
           oauthprovider:
-            token-uri: ${AAC_TOKEN_URI:}
             issuer-uri: ${AAC_ISSUER_URI:}
-            authorization-uri: ${AAC_AUTHORIZATION_URI:}
 
 playandgo:
   engine:
@@ -46,4 +45,4 @@ gamification:
   user: ${GAMIFICATION_USER:}
   password: ${GAMIFICATION_PASSWORD:}
   secretKey1: ${GAMIFICATION_SK1:}
-  secretKey2: ${GAMIFICATION_SK2:}     
+  secretKey2: ${GAMIFICATION_SK2:}  
