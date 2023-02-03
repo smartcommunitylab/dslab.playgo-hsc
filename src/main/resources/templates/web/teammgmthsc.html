@@ -296,8 +296,7 @@
     	  logout() {
     		      console.log('logout');
               delete sessionStorage.access_token;
-              delete sessionStorage.access_token_expires_in;
-              window.location.href = AAC_ENDPOINT + '/logout?target=' + window.location.href; 
+              window.location.href = '../logout';
     	  },
     	  load() {
 					this.loading = true;
