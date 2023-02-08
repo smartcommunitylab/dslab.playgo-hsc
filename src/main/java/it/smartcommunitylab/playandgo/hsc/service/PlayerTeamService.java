@@ -74,6 +74,7 @@ public class PlayerTeamService {
 	
 	public static final String KEY_NAME = "name";
 	public static final String KEY_DESC = "desc";
+	public static final String KEY_TEAM_NUM = "maxMembers";
 	
 	@Autowired
 	private PlayGoEngineClientService engineService;
@@ -277,6 +278,9 @@ public class PlayerTeamService {
 				team.getCustomData().put(KEY_NAME, existing.getCustomData().get(KEY_NAME));
 				team.setExpected(existing.getExpected());
 			}
+			if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), KEY_TEAM_NUM, team.getExpected())) {
+				throw new DataException("GAMIFICATION-CUSTOM-DATA");
+			}							
 		} else {
 			if (!Boolean.TRUE.equals(initiative.getCanCreate())) {
 				throw new OperationNotEnabledException("CREATE");
@@ -286,6 +290,9 @@ public class PlayerTeamService {
 			if(!gamificationEngineService.createPlayer(team.getId(), initiative.getCampaign().getGameId(), true)) {
 				throw new DataException("GAMIFICATION-TEAM");
 			}
+			if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), KEY_TEAM_NUM, team.getExpected())) {
+				throw new DataException("GAMIFICATION-CUSTOM-DATA");
+			}							
 			engineService.addGroup(team.getId(), initiative.getInitiativeId());
 		}
 		validate(team, initiative);
