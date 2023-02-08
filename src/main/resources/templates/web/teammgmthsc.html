@@ -349,6 +349,10 @@
 				},
     	  createNew() {
     		  this.currTeam = {members: [], customData: {}};
+					if(this.initiatives.length == 1) {
+						this.currInitiativeId = this.initiatives[0].initiativeId;
+						this.onInitiativeChange();		
+					}
     		  this.editing = false;
     		  this.dialog = true;
           this.getCandidates();
