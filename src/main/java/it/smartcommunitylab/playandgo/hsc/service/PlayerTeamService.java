@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -74,6 +75,7 @@ public class PlayerTeamService {
 	
 	public static final String KEY_NAME = "name";
 	public static final String KEY_DESC = "desc";
+	public static final String KEY_TEAM_NUM = "maxMembers";
 	
 	@Autowired
 	private PlayGoEngineClientService engineService;
@@ -216,10 +218,16 @@ public class PlayerTeamService {
 							.collect(Collectors.toSet());
 					final Set<String> registered = members
 							.stream()
-							.filter(t -> t.isSubscribed())
+							//.filter(t -> t.isSubscribed())
 							.map(t -> t.getNickname())
 							.collect(Collectors.toSet());
-					page.getContent().forEach(p -> p.setSubscribed(registered.contains(p.getNickname())));
+					List<PlayerInfo> result = new ArrayList<>();
+					page.getContent().forEach(p -> {
+						if(!registered.contains(p.getNickname())) {
+							result.add(p);
+						}
+					});
+					return new PageImpl<>(result, pageRequest, result.size());
 				}
 				return page;
 			}			
@@ -277,6 +285,9 @@ public class PlayerTeamService {
 				team.getCustomData().put(KEY_NAME, existing.getCustomData().get(KEY_NAME));
 				team.setExpected(existing.getExpected());
 			}
+			if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), KEY_TEAM_NUM, team.getExpected())) {
+				throw new DataException("GAMIFICATION-CUSTOM-DATA");
+			}							
 		} else {
 			if (!Boolean.TRUE.equals(initiative.getCanCreate())) {
 				throw new OperationNotEnabledException("CREATE");
@@ -286,6 +297,9 @@ public class PlayerTeamService {
 			if(!gamificationEngineService.createPlayer(team.getId(), initiative.getCampaign().getGameId(), true)) {
 				throw new DataException("GAMIFICATION-TEAM");
 			}
+			if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), KEY_TEAM_NUM, team.getExpected())) {
+				throw new DataException("GAMIFICATION-CUSTOM-DATA");
+			}							
 			engineService.addGroup(team.getId(), initiative.getInitiativeId());
 		}
 		validate(team, initiative);

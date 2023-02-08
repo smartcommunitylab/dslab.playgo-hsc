@@ -89,7 +89,7 @@
             <v-row>
             	<v-col cols="12">
             		<v-select v-model="currInitiativeId" :items="initiatives" item-value="initiativeId" :rules="fieldRules" 
-            			:label="F_CAMPAIGN_LABEL" required :disabled="editing">
+            			:label="F_CAMPAIGN_LABEL" required :disabled="editing" @change="onInitiativeChange">
             			<template v-slot:selection="data">
             				{{getInitiativeName(data.item)}}
             			</template>
@@ -116,7 +116,7 @@
               </v-col>
               
               <v-col cols="12">
-                <v-text-field :rules="[rules.required, rules.classNum]" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL" 
+                <v-text-field :rules="[rules.required, rules.classNum]" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL+'*'" 
                 	min="1" max="30" required :disabled="editing && currTeam.isRunning"></v-text-field>
                 	<small>Inserisci il numero di alunni di cui la classe è composta. Il numero alunni sarà utilizzato in vari calcoli per l’assegnazione di punteggi.
 									<br><strong>Attenzione!</strong> A gioco avviato il numero alunni non potrà più essere modificato</small>
@@ -239,6 +239,10 @@
     	  }
       },
       methods: {
+				onInitiativeChange() {
+					let i = this.getInitiative(this.currInitiativeId);
+					this.currTeam.expected = i.maxTeamSize;
+				},
 				getInitiative(id) {
 					for(i of this.initiatives) {
 						if(i.initiativeId == id) return i;
@@ -345,6 +349,10 @@
 				},
     	  createNew() {
     		  this.currTeam = {members: [], customData: {}};
+					if(this.initiatives.length == 1) {
+						this.currInitiativeId = this.initiatives[0].initiativeId;
+						this.onInitiativeChange();		
+					}
     		  this.editing = false;
     		  this.dialog = true;
           this.getCandidates();
