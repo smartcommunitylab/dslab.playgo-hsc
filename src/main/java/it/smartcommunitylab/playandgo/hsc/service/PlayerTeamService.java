@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -217,10 +218,16 @@ public class PlayerTeamService {
 							.collect(Collectors.toSet());
 					final Set<String> registered = members
 							.stream()
-							.filter(t -> t.isSubscribed())
+							//.filter(t -> t.isSubscribed())
 							.map(t -> t.getNickname())
 							.collect(Collectors.toSet());
-					page.getContent().forEach(p -> p.setSubscribed(registered.contains(p.getNickname())));
+					List<PlayerInfo> result = new ArrayList<>();
+					page.getContent().forEach(p -> {
+						if(!registered.contains(p.getNickname())) {
+							result.add(p);
+						}
+					});
+					return new PageImpl<>(result, pageRequest, result.size());
 				}
 				return page;
 			}			
