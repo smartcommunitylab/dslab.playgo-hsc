@@ -50,11 +50,10 @@ Aliquam vitae dolor et odio volutpat maximus pellentesque aliquet diam. Cras ven
     		<v-card-text>
     			<v-row>
 						<v-checkbox v-model="privacy" :label="`Privacy`"></v-checkbox>    			
-						<v-checkbox v-model="termOfConditions" :label="`Termini e condizioni`"></v-checkbox>    			
     			</v-row>
     		</v-card-text>
     		<v-card-actions>
-    			<v-btn :disabled="!privacy || !termOfConditions" text @click="send">Invia</v-btn>
+    			<v-btn :disabled="!privacy" text @click="send">Invia</v-btn>
     		</v-card-actions>
     	</v-card > 
   	</div>
@@ -87,7 +86,7 @@ Aliquam vitae dolor et odio volutpat maximus pellentesque aliquet diam. Cras ven
       methods: {
         send() {
             this.loading = true;
-            axios.put(`../api/user/consent?privacy=${this.privacy}&termOfConditions=${this.termOfConditions}`, {}, conf).then((data) => {
+            axios.put(`../api/user/consent?privacy=${this.privacy}`, {}, conf).then((data) => {
               this.loading = false;                
 	            window.open('../web', '_self');                                  
             }).catch(err => {
