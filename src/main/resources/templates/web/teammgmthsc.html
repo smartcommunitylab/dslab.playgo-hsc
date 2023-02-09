@@ -167,6 +167,7 @@
       <v-card>
         <v-card-title class="headline" th:text="#{teammgmt.error_server}">Server error!</v-card-title>
         <v-card-text th:text="#{teammgmt.error_server_msg}">Error message!</v-card-text>
+        <v-card-text><strong>{{errorDialogMsg}}</strong> <small>[{{errorDialogCode}}]</small></v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn  text @click="errorDialog = false" th:text="#{teammgmt.btn_close}"> Close </v-btn>
@@ -194,6 +195,9 @@
     		  deleteDialog: false,
     		  createDialogConfirm: false,
           errorDialog: false,
+          errorDialogMsg: '',
+          errorDialogCode: '',
+    		  errorLabels: [],
     		  valid: true,
     		  loading: false,
     		  unauthorized: false,
@@ -229,6 +233,19 @@
       },
       created() {
     	  console.log('Initializing');
+    	  this.errorLabels['NAME'] = "[[#{rest.error.NAME}]]";
+    	  this.errorLabels['TEAM'] = "[[#{rest.error.TEAM}]]";
+    	  this.errorLabels['NO_TEAM'] = "[[#{rest.error.NO_TEAM}]]";
+    	  this.errorLabels['NO_INITIATIVE'] = "[[#{rest.error.NO_INITIATIVE}]]";
+    	  this.errorLabels['OWNER'] = "[[#{rest.error.OWNER}]]";
+    	  this.errorLabels['EDIT'] = "[[#{rest.error.EDIT}]]";
+    	  this.errorLabels['GAMIFICATION_CUSTOM_DATA'] = "[[#{rest.error.GAMIFICATION_CUSTOM_DATA}]]";
+    	  this.errorLabels['GAMIFICATION_TEAM'] = "[[#{rest.error.GAMIFICATION_TEAM}]]";
+    	  this.errorLabels['ENGINE_TEAM'] = "[[#{rest.error.ENGINE_TEAM}]]";
+    	  this.errorLabels['GAMIFICATION_PLAYER'] = "[[#{rest.error.GAMIFICATION_PLAYER}]]";
+    	  this.errorLabels['CREATE'] = "[[#{rest.error.CREATE}]]";
+    	  this.errorLabels['TEAM'] = "[[#{rest.error.TEAM}]]";
+    	  this.errorLabels['PLAYER'] = "[[#{rest.error.PLAYER}]]";
     	  this.load();
       },
       computed: {
@@ -406,6 +423,8 @@
           })
           .catch(e => {
               this.loading = false;
+              this.errorDialogCode = e.response.data.type;
+              this.errorDialogMsg = this.errorLabels[e.response.data.type];
               this.errorDialog = true;
               this.createDialogConfirm = false;                  
           });
