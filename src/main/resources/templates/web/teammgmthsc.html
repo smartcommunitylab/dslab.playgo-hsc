@@ -170,7 +170,7 @@
         <v-card-text><strong>{{errorDialogMsg}}</strong> <small>[{{errorDialogCode}}]</small></v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn  text @click="errorDialog = false" th:text="#{teammgmt.btn_close}"> Close </v-btn>
+          <v-btn  text @click="closeErrorDialog()" th:text="#{teammgmt.btn_close}"> Close </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>    
@@ -388,6 +388,11 @@
     		  this.editing = false;
     		  this.dialog = false;
     	  },
+    	  closeErrorDialog() {
+					this.errorDialogCode = '';
+					this.errorDialogMsg= '';
+					this.errorDialog = false;
+				},    	  
     	  saveTeam() {
     		  if (this.currTeam.id) {
     			  this.confirmSave();
