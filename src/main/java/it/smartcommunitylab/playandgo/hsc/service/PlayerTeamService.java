@@ -286,7 +286,7 @@ public class PlayerTeamService {
 				team.setExpected(existing.getExpected());
 			}
 			if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), KEY_TEAM_NUM, team.getExpected())) {
-				throw new DataException("GAMIFICATION-CUSTOM-DATA");
+				throw new DataException("GAMIFICATION_CUSTOM_DATA");
 			}							
 		} else {
 			if (!Boolean.TRUE.equals(initiative.getCanCreate())) {
@@ -295,12 +295,16 @@ public class PlayerTeamService {
 			team.setId(UUID.randomUUID().toString());
 			team.setOwner(currentUser);
 			if(!gamificationEngineService.createPlayer(team.getId(), initiative.getCampaign().getGameId(), true)) {
-				throw new DataException("GAMIFICATION-TEAM");
+				throw new DataException("GAMIFICATION_TEAM");
 			}
 			if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), KEY_TEAM_NUM, team.getExpected())) {
-				throw new DataException("GAMIFICATION-CUSTOM-DATA");
+				throw new DataException("GAMIFICATION_CUSTOM_DATA");
 			}							
-			engineService.addGroup(team.getId(), initiative.getInitiativeId());
+			try {
+				engineService.addGroup(team.getId(), initiative.getInitiativeId());
+			} catch (Exception e) {
+				throw new DataException("ENGINE_TEAM");
+			}
 		}
 		validate(team, initiative);
 		for(TeamMember tm : toAdd) {
@@ -310,7 +314,7 @@ public class PlayerTeamService {
 		for (TeamMember tm : toRemove) {
 			if(tm.isSubscribed()) {
 				if(!gamificationEngineService.removePlayerToGroup(tm.getPlayerId(), team.getId(), initiative.getCampaign().getGameId())) {
-					throw new DataException("GAMIFICATION-PLAYER");
+					throw new DataException("GAMIFICATION_PLAYER");
 				}						
 				try {
 					engineService.unsubscribe(initiative.getInitiativeId(), tm.getNickname());
@@ -353,7 +357,7 @@ public class PlayerTeamService {
 		}
 		
 		if(!gamificationEngineService.deleteGroup(existing.getId(), initiative.getCampaign().getGameId())) {
-			throw new DataException("GAMIFICATION-TEAM");
+			throw new DataException("GAMIFICATION_TEAM");
 		}
 		engineService.deleteGroup(teamId);
 		
@@ -480,7 +484,7 @@ public class PlayerTeamService {
 		return list;
 	}
 	
-	@Scheduled(fixedDelay=1000*60*60*24, initialDelay = 1000*60*60) 
+	@Scheduled(fixedDelay=1000*60*60*8, initialDelay = 1000*60*5) 
 	public void syncExternalCampaigns() {
 		List<Campaign> campaigns = engineService.getCampaigns();
 		for (Campaign c : campaigns) {

@@ -22,7 +22,7 @@ public class UserController {
 	}
 	
 	@PutMapping("/api/user/consent")
-	public ResponseEntity<UserConsent> updateConsent(@RequestParam boolean privacy, @RequestParam boolean termOfConditions) {
-		return ResponseEntity.ok(userConsentService.updateConsent(privacy, termOfConditions));
+	public ResponseEntity<UserConsent> updateConsent(@RequestParam boolean privacy) {
+		return ResponseEntity.ok(userConsentService.updateConsent(privacy));
 	}
 }

@@ -20,7 +20,7 @@ public class UserConsentService {
 	public boolean existConsent() throws SecurityException {
 		String email = securityHelper.getCurrentPreferredUsername();
 		UserConsent consent = userConsentRepository.findByEmail(email);
-		if((consent != null) && consent.isPrivacy() && consent.isTermOfConditions()) {
+		if((consent != null) && consent.isPrivacy()) {
 			return true;
 		}			
 		return false;
@@ -31,7 +31,7 @@ public class UserConsentService {
 		return  userConsentRepository.findByEmail(email);
 	}
 	
-	public UserConsent updateConsent(boolean privacy, boolean termOfConditions) {
+	public UserConsent updateConsent(boolean privacy) {
 		String email = securityHelper.getCurrentPreferredUsername();
 		UserConsent consent = userConsentRepository.findByEmail(email);
 		if(consent != null) {
@@ -41,7 +41,6 @@ public class UserConsentService {
 		consent.setEmail(email);
 		consent.setDate(new Date());
 		consent.setPrivacy(privacy);
-		consent.setTermOfConditions(termOfConditions);
 		userConsentRepository.save(consent);
 		return consent;
 	}
