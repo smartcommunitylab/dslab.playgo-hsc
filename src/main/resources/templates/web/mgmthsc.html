@@ -318,7 +318,8 @@
 					return list.slice(0, -2);
 				},
     	  createNew() {
-    		  this.currTeam = {members: [], customData: {}, expected: this.maxTeamSize};
+    		  this.currTeam = {members: [], customData: {}, expected: 1};
+    		  this.avatar = null;
     		  this.editing = false;
     		  this.dialog = true;
           this.getCandidates();
@@ -326,6 +327,7 @@
     	  editTeam(team) {
     		  var editTeam = Object.assign({}, team);
     		  this.currTeam = editTeam;
+    		  this.avatar = null;
     		  this.editing = true;
           this.dialog = true;    		  
           this.getCandidates();
