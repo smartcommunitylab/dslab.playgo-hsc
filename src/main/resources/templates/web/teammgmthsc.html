@@ -258,7 +258,7 @@
       methods: {
 				onInitiativeChange() {
 					let i = this.getInitiative(this.currInitiativeId);
-					this.currTeam.expected = i.maxTeamSize;
+					this.currTeam.expected = 1;
 				},
 				getInitiative(id) {
 					for(i of this.initiatives) {
@@ -370,6 +370,7 @@
 						this.currInitiativeId = this.initiatives[0].initiativeId;
 						this.onInitiativeChange();		
 					}
+					this.avatar = null;
     		  this.editing = false;
     		  this.dialog = true;
           this.getCandidates();
@@ -378,6 +379,7 @@
     		  var editTeam = Object.assign({}, team);
     		  this.currTeam = editTeam;
     		  this.currInitiativeId = editTeam.initiativeId;
+    		  this.avatar = null;
           this.editing = true; 		  
           this.dialog = true;   
           this.getCandidates();
