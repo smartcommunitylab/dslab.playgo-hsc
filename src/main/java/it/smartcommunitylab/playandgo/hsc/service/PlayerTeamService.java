@@ -19,6 +19,7 @@ package it.smartcommunitylab.playandgo.hsc.service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +76,8 @@ public class PlayerTeamService {
 	
 	public static final String KEY_NAME = "name";
 	public static final String KEY_DESC = "desc";
-	public static final String KEY_TEAM_NUM = "maxMembers";
+	public static final String KEY_TEAM_MAX_NUM = "maxMembers";
+	public static final String KEY_TEAM_NUM = "currentPlayers";
 	
 	@Autowired
 	private PlayGoEngineClientService engineService;
@@ -285,9 +287,6 @@ public class PlayerTeamService {
 				team.getCustomData().put(KEY_NAME, existing.getCustomData().get(KEY_NAME));
 				team.setExpected(existing.getExpected());
 			}
-			if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), KEY_TEAM_NUM, team.getExpected())) {
-				throw new DataException("GAMIFICATION_CUSTOM_DATA");
-			}							
 		} else {
 			if (!Boolean.TRUE.equals(initiative.getCanCreate())) {
 				throw new OperationNotEnabledException("CREATE");
@@ -297,9 +296,6 @@ public class PlayerTeamService {
 			if(!gamificationEngineService.createPlayer(team.getId(), initiative.getCampaign().getGameId(), true)) {
 				throw new DataException("GAMIFICATION_TEAM");
 			}
-			if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), KEY_TEAM_NUM, team.getExpected())) {
-				throw new DataException("GAMIFICATION_CUSTOM_DATA");
-			}							
 			try {
 				engineService.addGroup(team.getId(), initiative.getInitiativeId());
 			} catch (Exception e) {
@@ -323,6 +319,12 @@ public class PlayerTeamService {
 				}				
 			}
 		}
+		Map<String, Object> customData = new HashMap<>();
+		customData.put(KEY_TEAM_MAX_NUM, team.getExpected());
+		customData.put(KEY_TEAM_NUM, team.getMembers().size());
+		if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), customData)) {
+			throw new DataException("GAMIFICATION_CUSTOM_DATA");
+		}							
 		team = teamRepo.save(team);
 		return team;
 	}

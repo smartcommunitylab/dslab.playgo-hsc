@@ -99,10 +99,8 @@ public class GamificationEngineService {
 		return false;		
 	}
 	
-	public boolean changeCustomData(String playerId, String gameId, String key, Object value) {
+	public boolean changeCustomData(String playerId, String gameId, Map<String, Object> customData) {
 		try {
-			Map<String, Object> customData = new HashMap<>();
-			customData.put(key, value);
 			String content = JsonUtils.toJSON(customData);
 			String url = gamificationUrl + "/data/game/" + gameId + "/player/" + playerId + "/custom";
 			ResponseEntity<String> entity = HTTPConnector.doBasicAuthenticationMethod(url, content, "application/json", 
