@@ -127,6 +127,7 @@ public class PlayerTeamService {
 	
 	public List<Initiative> getInitativesForManager() {
 		List<UserRole> roles = engineService.getUserRoles();
+		logger.info("getInitativesForManager roles:" + roles);
 		if (isAdmin(roles)) return initiativeRepo.findAll();
 		List<String> territories = getTerritories(roles);
 		logger.info("getInitativesForManager territories:" + territories);
