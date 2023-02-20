@@ -40,4 +40,9 @@ public class UserRole {
 	public void setPreferredUsername(String preferredUsername) {
 		this.preferredUsername = preferredUsername;
 	}
+	
+	@Override
+	public String toString() {
+		return preferredUsername + "_" + role.toString() + "_" + entityId;
+	}
 }
