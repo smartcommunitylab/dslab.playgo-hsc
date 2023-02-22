@@ -117,7 +117,7 @@
               
               <v-col cols="12">
                 <v-text-field :rules="[rules.required, rules.classNum]" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL+'*'" 
-                	min="1" max="30" required :disabled="editing && currTeam.isRunning"></v-text-field>
+                	min="1" max="30" required :disabled="editing && currTeam.isRunning" @wheel="$event.target.blur()"></v-text-field>
                 	<small>Inserisci il <strong>NUMERO TOTALE DI ALUNNI</strong> di cui la classe è composta. Il numero alunni sarà utilizzato in vari calcoli per l’assegnazione di punteggi.
 									<br><strong>Attenzione!</strong> A gioco avviato il numero alunni non potrà più essere modificato</small>
               </v-col>
