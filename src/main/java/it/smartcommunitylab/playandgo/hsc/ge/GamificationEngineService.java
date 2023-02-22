@@ -32,6 +32,10 @@ public class GamificationEngineService {
 	ObjectMapper mapper = new ObjectMapper();
 		
 	public boolean createPlayer(String playerId, String gameId, boolean isGroup) {
+		if(gameId == null) {
+			logger.error(String.format("createPlayer error: %s - %s - %s", gameId, playerId, "gameId null"));
+			return false;
+		}
 		try {
 			Map<String, Object> data = new HashMap<>();
 			data.put("gameId", gameId);
