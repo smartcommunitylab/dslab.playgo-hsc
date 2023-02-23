@@ -503,6 +503,15 @@ public class PlayerTeamService {
 				initiative.setBonusThreshold(90d);
 				initiative.setMaxTeamSize(30);
 				initiative.setType("hsc");
+			} else {
+				String gameId = initiative.getCampaign().getGameId();
+				if((gameId != null) && (!gameId.equals(c.getGameId()))) {
+					List<PlayerTeam> list = teamRepo.findByInitiativeId(initiative.getInitiativeId());
+					if(list.size() > 0) {
+						logger.error(String.format("syncExternalCampaigns align gameId error: %s - %s - %s", initiative.getInitiativeId(), gameId, c.getGameId()));
+						c.setGameId(gameId);
+					}
+				}
 			}
 			initiative.setCampaign(c);
 			initiativeRepo.save(initiative);
