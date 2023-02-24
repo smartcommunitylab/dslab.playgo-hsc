@@ -93,4 +93,9 @@ public class PlayerTeam {
 	public void setNumMembers(int numMembers) {
 		this.numMembers = numMembers;
 	}
+	
+	@Override
+	public String toString() {
+		return id + "_" + initiativeId;
+	}
 }
