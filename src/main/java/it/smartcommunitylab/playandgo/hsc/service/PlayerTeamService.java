@@ -126,14 +126,15 @@ public class PlayerTeamService {
 	}
 	
 	public List<Initiative> getInitativesForManager() {
+		String email = securityHelper.getCurrentPreferredUsername();
 		List<UserRole> roles = engineService.getUserRoles();
-		logger.info("getInitativesForManager roles:" + roles);
+		logger.info(String.format("getInitativesForManager roles[%s]:%s", email, roles));
 		if (isAdmin(roles)) return initiativeRepo.findAll();
 		List<String> territories = getTerritories(roles);
-		logger.info("getInitativesForManager territories:" + territories);
+		logger.info(String.format("getInitativesForManager territories[%s]:%s", email, territories));
 		if ((territories != null) && (territories.size() > 0)) return initiativeRepo.findByTerritories(territories);
 		List<String> campaigns = getCampaigns(roles);
-		logger.info("getInitativesForManager campaigns:" + campaigns);
+		logger.info(String.format("getInitativesForManager campaigns[%s]:%s", email, campaigns));
 		if ((campaigns != null) && (campaigns.size() > 0)) return initiativeRepo.findByCampaignIds(campaigns);
 		return Collections.emptyList();
 	}
@@ -182,6 +183,7 @@ public class PlayerTeamService {
 		String email = securityHelper.getCurrentPreferredUsername();
 		List<Initiative> list = initiativeRepo.findAll();
 		List<Initiative> result = list.stream().filter(i -> isTeamManager(i, email)).collect(Collectors.toList());
+		logger.info(String.format("getTeamLeaderInitiatives [%s]:%s", email, result));		
 		return result;
 	}
 	
@@ -189,6 +191,7 @@ public class PlayerTeamService {
 		String email = securityHelper.getCurrentPreferredUsername();
 		List<PlayerTeam> result = teamRepo.findByOwner(email);
 		result.forEach(t -> addSmallAvatar(t));
+		logger.info(String.format("getPlayerTeamByOwner [%s]:%s", email, result));
 		return result;
 	}
 	

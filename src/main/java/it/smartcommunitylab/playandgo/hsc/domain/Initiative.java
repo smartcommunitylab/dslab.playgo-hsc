@@ -103,4 +103,9 @@ public class Initiative {
 	public void setMaxTeamSize(Integer maxTeamSize) {
 		this.maxTeamSize = maxTeamSize;
 	}
+	
+	@Override
+	public String toString() {
+		return initiativeId + "_" + type;
+	}
 }
