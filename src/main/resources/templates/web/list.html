@@ -100,7 +100,7 @@
               	</v-chip-group>
               </v-col>
               <v-col cols="12">
-              	<v-text-field :persistent-hint="true" :label="TEAM_LEADER_LABEL" :rules="[rules.email]"
+              	<v-text-field :persistent-hint="true" :label="TEAM_LEADER_LABEL" :rules="[rules.email]" ref="teamLeader"
               		v-model="teamLeader" @keydown.enter.prevent="enterTeamLeader()"></v-text-field>
               </v-col>
               <v-col cols="12">
@@ -112,7 +112,7 @@
               	</v-chip-group>
               </v-col>
               <v-col cols="12">
-              	<v-text-field :persistent-hint="true" :label="TEAM_LEADER_DOMAIN_LABEL" :rules="[rules.domain]"
+              	<v-text-field :persistent-hint="true" :label="TEAM_LEADER_DOMAIN_LABEL" :rules="[rules.domain]" ref="teamLeaderDomain"
               		v-model="teamLeaderDomain" @keydown.enter.prevent="enterTeamLeaderDomain()"></v-text-field>
               </v-col>
             </v-row>
@@ -222,16 +222,20 @@
           this.initiative.teamLeaderList.splice(idx, 1);
         },
         enterTeamLeader() {
-          this.initiative.teamLeaderList.push(this.teamLeader);
-          this.teamLeader = null;
+					if(this.$refs['teamLeader'].valid) {
+          	this.initiative.teamLeaderList.push(this.teamLeader.trim());
+          	this.teamLeader = null;						
+					}
         },
         removeTeamLeaderDomain(item) {
           let idx = this.initiative.teamLeaderDomainList.indexOf(item);
           this.initiative.teamLeaderDomainList.splice(idx, 1);
         },
         enterTeamLeaderDomain() {
-          this.initiative.teamLeaderDomainList.push(this.teamLeaderDomain);
-          this.teamLeaderDomain = null;
+					if(this.$refs['teamLeaderDomain'].valid) {
+	          this.initiative.teamLeaderDomainList.push(this.teamLeaderDomain.trim());
+  	        this.teamLeaderDomain = null;
+					}
         },      
         go(page) {
           window.location.href = './' + page;
