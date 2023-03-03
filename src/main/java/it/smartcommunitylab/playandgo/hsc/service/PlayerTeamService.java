@@ -289,7 +289,7 @@ public class PlayerTeamService {
 			toRemove = new HashSet<>(existing.getMembers());
 			toRemove.removeAll(team.getMembers());
 			toAdd.removeAll(existing.getMembers());
-			if(isRunning) {
+			if(isRunning && !isAdmin()) {
 				team.getCustomData().put(KEY_NAME, existing.getCustomData().get(KEY_NAME));
 				team.setExpected(existing.getExpected());
 			}
@@ -521,7 +521,7 @@ public class PlayerTeamService {
 		}
 	}
 	
-	private boolean isAdmin() {
+	public boolean isAdmin() {
 		List<UserRole> roles = engineService.getUserRoles();
 		return isAdmin(roles);
 	}
