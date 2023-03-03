@@ -14,6 +14,7 @@
 <script type="text/javascript" th:inline="javascript">
     /*<![CDATA[*/
     	sessionStorage.access_token = [[${token}]];
+    	IS_ADMIN = [[${isAdmin}]]
       INITIATIVE = [[${initiative}]];
       FIELD_REQUIRED = [[#{teammgmt.error_required}]];
       TEAM_SIZE_LABEL = [[#{teammgmt.hsc.team_size_label}]];
@@ -91,7 +92,7 @@
             <v-row>
               <v-col cols="12">
                 <v-text-field :rules="fieldRules" v-model="currTeam.customData['name']" :label="F_NAME_LABEL+'*'" maxlength="25" 
-                	required :disabled="editing && currTeam.isRunning"></v-text-field>
+                	required :disabled="editing && currTeam.isRunning && !isAdmin"></v-text-field>
               	<small>Puoi usare un nome di fantasia che permetta di identificare univocamente la tua squadra. ATTENZIONE! A gioco avviato il nome della squadra non potrà più essere modificato</small>  	
               </v-col>
               <v-col cols="12">
@@ -101,12 +102,12 @@
 
               <v-col cols="12">
 	              <v-file-input v-model="avatar" label="Avatar"></v-file-input>
-	              <small>Inserisci un immagine per contraddistinguere la tua squadra nelle varie schermate della mobile app come classifiche e altro. Si consiglia di usare immagini di proporzioni pressoché quadrate.</small>
+	              <small>Inserisci un'immagine per contraddistinguere la tua squadra nelle varie schermate della mobile app come classifiche e altro. Si consiglia di usare immagini di proporzioni pressoché quadrate.</small>
               </v-col>
               
               <v-col cols="12">
                 <v-text-field :rules="[rules.required, rules.classNum]" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL+'*'" 
-                	min="1" required :disabled="editing && currTeam.isRunning" @wheel="$event.target.blur()"></v-text-field>
+                	min="1" required :disabled="editing && currTeam.isRunning && !isAdmin" @wheel="$event.target.blur()"></v-text-field>
                 	<small>Inserisci il <strong>NUMERO TOTALE DI ALUNNI</strong> di cui la classe è composta. Il numero alunni sarà utilizzato in vari calcoli per l’assegnazione di punteggi.
 									<br><strong>Attenzione!</strong> A gioco avviato il numero alunni non potrà più essere modificato</small>
               </v-col>
@@ -191,6 +192,7 @@
     		  loading: false,
     		  unauthorized: false,
     		  editing: false,
+    		  isAdmin: IS_ADMIN,
     		  TEAM_SIZE_LABEL: TEAM_SIZE_LABEL,
     		  F_NAME_LABEL: F_NAME_LABEL,
     		  fieldRules: [

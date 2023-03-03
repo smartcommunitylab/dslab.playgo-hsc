@@ -97,6 +97,7 @@ public class WebController {
 			}
 			ModelAndView model = new ModelAndView("web/list"); 
 			model.addObject("token", getToken());
+			model.addObject("isAdmin", teamService.isAdmin());
 			return model;
 		} catch (Exception e) {
 			return new ModelAndView("redirect:/logout");
