@@ -318,6 +318,15 @@ public class PlayGoEngineClientService {
 		.bodyToMono(Map.class)
 		.block();
     }
+    
+    public void removePlayerFromGroup(String playerId, String campaignId) {
+    	webClient.delete()
+    	.uri("/api/ext/player/campaign/sub?campaignId="+campaignId+"&playerId="+playerId)
+		.header("Authorization", "Bearer " + securityHelper.getCurrentToken())
+		.retrieve()
+		.bodyToMono(Map.class)
+		.block();    	
+    }
 
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"pageable"})
 	public static class RestPage<T> extends PageImpl<T> {

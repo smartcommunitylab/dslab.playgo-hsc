@@ -97,7 +97,6 @@ public class WebController {
 			}
 			ModelAndView model = new ModelAndView("web/list"); 
 			model.addObject("token", getToken());
-			model.addObject("isAdmin", teamService.isAdmin());
 			return model;
 		} catch (Exception e) {
 			return new ModelAndView("redirect:/logout");
@@ -114,6 +113,7 @@ public class WebController {
 			Initiative obj = teamService.getInitiative(initiativeId);
 			model.addObject("token", getToken());
 			model.addObject("initiative", obj);
+			model.addObject("isAdmin", teamService.isAdmin());
 			return model;
 		} catch (Exception e) {
 			return new ModelAndView("redirect:/logout");

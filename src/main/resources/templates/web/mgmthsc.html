@@ -63,7 +63,7 @@
 					      <v-list-item-content>
 					        <v-list-item-title><span><strong>{{F_NAME_LABEL}}: {{team.customData['name']}}</strong></span></v-list-item-title>
 					        <v-list-item-title><span th:text="#{teamboard.hsc.desc}"></span>: {{team.customData['desc']}}</v-list-item-title>
-                  <v-list-item-title v-if="isAdmin"><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-title>
+                  <v-list-item-title><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-title>
                   <v-list-item-title><span th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
 					        <v-list-item-title>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
 					      </v-list-item-content>
@@ -72,7 +72,8 @@
 								</v-avatar>					    
 					    </v-list-item>
 					    <v-card-actions>
-					      <v-btn v-if="isAdmin && !unauthorized && !loading" color="primary" text @click="editTeam(team)" th:text="#{teammgmt.btn_edit}">Edit</v-btn>
+					      <v-btn v-if="!unauthorized && !loading" color="primary" text @click="editTeam(team)" th:text="#{teammgmt.btn_edit}">Edit</v-btn>
+					      <v-btn v-if="isAdmin && !loading" color="error" text @click="removePlayer(team)" th:text="#{teammgmt.btn_remove_player}">Remove player</v-btn>
 					    </v-card-actions>					    
 					  </v-card>
 		      </v-col>
@@ -163,6 +164,27 @@
           <v-btn  text @click="closeErrorDialog()" th:text="#{teammgmt.btn_close}"> Close </v-btn>
         </v-card-actions>
       </v-card>
+    </v-dialog>
+        
+    <v-dialog v-model="removePlayerDialog" max-width="480">
+      <v-card>
+        <v-card-title class="headline" th:text="#{teammgmt.confirm_remove_player}">Delete message!</v-card-title>
+        <v-container>
+	        <!--<v-card-text th:text="#{teammgmt.confirm_remove_player}">Are you sure you want to delete? This cannot be undone!</v-card-text>-->
+			    <v-radio-group v-model="playerToRemove">
+			      <v-radio v-for="tm in currTeam.members"
+			        :key="tm.playerId"
+			        :label="getTmLabel(tm)"
+			        :value="tm.playerId"
+			      ></v-radio>
+			    </v-radio-group>                
+        </v-container>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn  text @click="cancelRemovePlayer()" th:text="#{teammgmt.btn_cancel}"> Cancel </v-btn>
+          <v-btn color="error" text @click="confirmRemovePlayer()" :disabled="!playerToRemove" th:text="#{teammgmt.btn_delete}">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
     </v-dialog>    
         
   </v-app>
@@ -184,6 +206,7 @@
     		  dialog: false,
     		  deleteDialog: false,
     		  createDialogConfirm: false,
+    		  removePlayerDialog: false,
           errorDialog: false,
           errorDialogMsg: '',
           errorDialogCode: '',
@@ -195,6 +218,7 @@
     		  isAdmin: IS_ADMIN,
     		  TEAM_SIZE_LABEL: TEAM_SIZE_LABEL,
     		  F_NAME_LABEL: F_NAME_LABEL,
+    		  playerToRemove: null,
     		  fieldRules: [
     		        v => !!v || FIELD_REQUIRED
     		  ],
@@ -218,7 +242,6 @@
     		  initiative: INITIATIVE,
     		  maxTeamSize: INITIATIVE.maxTeamSize,
     		  initiativeId: INITIATIVE.initiativeId,
-    		  isAdmin: false,
     		  searchInput: null,
     		  timerId: null,
     		  avatar: null
@@ -291,18 +314,16 @@
               window.location.href = '../../logout';
     	  },
     	  load() {
-    		    this.loading = true;
-	          axios.get(`../../api/initiatives/${this.initiativeId}/admin`, conf).then((admin) => {
-	        	    this.isAdmin = admin.data;
-	              axios.get(`../../api/initiatives/${this.initiativeId}/teams`, conf).then((data) => {
-	                  this.teams = data.data;
-										this.teams.forEach(t => {
-											let now = Date.now();
-											t.isRunning = (this.initiative.campaign.dateFrom <= now) && (this.initiative.campaign.dateTo >= now);  
-										});	                  
-                   	this.loading = false;                 
-	              })
-	          }).catch(err => {
+    		    this.loading = true;	          
+            axios.get(`../../api/initiatives/${this.initiativeId}/teams`, conf).then((data) => {
+                this.teams = data.data;
+								this.teams.forEach(t => {
+									let now = Date.now();
+									t.isRunning = (this.initiative.campaign.dateFrom <= now) && (this.initiative.campaign.dateTo >= now);  
+								});	                  
+               	this.loading = false;                 
+            })
+	          .catch(err => {
                   console.log(err);
                   this.unauthorized = err.response.status == 401;
                   this.loading = false;                                   
@@ -318,6 +339,9 @@
 						list = list + tm.nickname + ', ';
 					});
 					return list.slice(0, -2);
+				},
+				getTmLabel(tm) {
+					return tm.nickname + " (subscribed:" + tm.subscribed + ", unregistered:" + tm.unregistered + ")";
 				},
     	  createNew() {
     		  this.currTeam = {members: [], customData: {}, expected: 1};
@@ -339,6 +363,31 @@
           this.editing = false;
     		  this.dialog = false;
     	  },
+    	  removePlayer(team) {
+    		  var editTeam = Object.assign({}, team);
+    		  this.currTeam = editTeam;
+					this.removePlayerDialog = true;
+				},
+				cancelRemovePlayer() {
+					this.currTeam = {members: [], customData: {}};
+					this.playerToRemove = null;
+					this.removePlayerDialog = false;
+				},
+				confirmRemovePlayer(playerId) {
+					this.loading = true;
+					var url = "../../api/initiatives/team/player?initiativeId=" + this.initiativeId + "&teamId=" + this.currTeam.id + "&playerId=" + this.playerToRemove;
+					axios.delete(url, conf).then((data) => {
+						this.loading = false;
+						this.playerToRemove = null;
+						this.removePlayerDialog = false;				
+						this.load();
+					})
+	      	.catch(e => {
+	            this.loading = false;
+							this.playerToRemove = null;
+							this.removePlayerDialog = false;
+	        });
+				},			
     	  closeErrorDialog() {
 					this.errorDialogCode = '';
 					this.errorDialogMsg= '';
