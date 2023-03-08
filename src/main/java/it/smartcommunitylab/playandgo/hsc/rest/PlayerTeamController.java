@@ -179,5 +179,14 @@ public class PlayerTeamController {
 	public List<PlayerTeam> getPlayerTeamByOwner() throws HSCError {
 		return teamService.getPlayerTeamByOwner();
 	}
+	
+	@DeleteMapping("/api/initiatives/team/player")
+	public ResponseEntity<Void> removePlayerFromTeam(
+			@RequestParam String initiativeId,
+			@RequestParam String teamId,
+			@RequestParam String playerId) throws HSCError {
+		teamService.removePlayerFromTeam(initiativeId, teamId, playerId);
+		return ResponseEntity.ok(null);	
+	}
 
 }

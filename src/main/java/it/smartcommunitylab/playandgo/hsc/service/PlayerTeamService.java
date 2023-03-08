@@ -325,14 +325,18 @@ public class PlayerTeamService {
 				}				
 			}
 		}
+		setGameMetadata(team, initiative);							
+		team = teamRepo.save(team);
+		return team;
+	}
+
+	private void setGameMetadata(PlayerTeam team, Initiative initiative) throws DataException {
 		Map<String, Object> customData = new HashMap<>();
 		customData.put(KEY_TEAM_MAX_NUM, team.getExpected());
 		customData.put(KEY_TEAM_NUM, team.getMembers().size());
 		if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), customData)) {
 			throw new DataException("GAMIFICATION_CUSTOM_DATA");
-		}							
-		team = teamRepo.save(team);
-		return team;
+		}
 	}
 	
 	public void deleteTeam(String initiativeId, String teamId) throws HSCError {
@@ -764,6 +768,10 @@ public class PlayerTeamService {
 					if(tm.getPlayerId().equals(playerId)) {
 						tm.setNickname(nickname);
 						tm.setUnregistered(true);
+						if(tm.isSubscribed()) {
+							tm.setSubscribed(false);
+							gamificationEngineService.removePlayerToGroup(playerId, team.getId(), initiative.getCampaign().getGameId());
+						}
 						save = true;
 					}					
 				}
@@ -773,6 +781,48 @@ public class PlayerTeamService {
 			}
 		}
 		throw new OperationNotEnabledException("UNREGISTER");		
+	}
+	
+	public void removePlayerFromTeam(String initiativeId, String teamId, String playerId) throws HSCError {
+		if(!isAdmin()) {
+			throw new OperationNotPermittedException("REMOVE_PLAYER");
+		}
+		Initiative initiative = getInitiative(initiativeId);
+		if (initiative == null) {
+			throw new NotFoundException("NO_INITIATIVE");
+		}
+		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
+		if(team == null) {
+			throw new NotFoundException("NO_TEAM");
+		}
+		TeamMember toRemove = null;
+		for(TeamMember tm : team.getMembers()) {
+			if(tm.getPlayerId().equals(playerId)) {
+				if(tm.isSubscribed() || tm.isUnregistered()) {
+					//remove play&go data
+					try {
+						engineService.removePlayerFromGroup(playerId, initiative.getInitiativeId());
+					} catch (Exception e) {
+						throw new DataException("ENGINE_TEAM");
+					}
+					//remove from team in GE
+					if(!gamificationEngineService.removePlayerToGroup(playerId, team.getId(), initiative.getCampaign().getGameId())) {
+						throw new DataException("GAMIFICATION_TEAM");
+					}
+					//remove player status in GE
+					if(!gamificationEngineService.removePlayer(playerId, initiative.getCampaign().getGameId())) {
+						throw new DataException("GAMIFICATION_TEAM");
+					}
+				}
+				toRemove = tm;
+				break;
+			}
+		}
+		if(toRemove != null) {
+			team.getMembers().remove(toRemove);
+			setGameMetadata(team, initiative);
+			teamRepo.save(team);
+		}
 	}
 
 }
