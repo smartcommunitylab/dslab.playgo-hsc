@@ -14,7 +14,7 @@ public interface PlayerTeamRepository extends MongoRepository<PlayerTeam, String
 	public List<PlayerTeam> findByInitiativeIdAndOwner(String initiativeId, String owner);
 	public List<PlayerTeam> findByInitiativeId(String initiativeId);
 	
-	@Query("{'customData.name': {$regex: ?0, $options:'i'}}")
+	@Query("{'customData.name': {$regex: '^?0$', $options:'i'}}")
 	public List<PlayerTeam> findByNickname(String name);
 	
 	public List<PlayerTeam> findByOwner(String owner);
