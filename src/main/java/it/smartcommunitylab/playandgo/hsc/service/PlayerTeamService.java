@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -243,6 +244,10 @@ public class PlayerTeamService {
 		return Page.empty();
 	}
 	
+	private String escapeRegEx(String s) {
+		return s.replace("*", "\\*").replace("+", "\\+").replace("?", "\\?").replace(".", "\\.").replace("^", "\\^").replace("$", "\\$");
+	}
+	
 	public PlayerTeam saveTeam(String initiativeId, PlayerTeam team) throws HSCError {
 		String currentUser = securityHelper.getCurrentPreferredUsername();
 		boolean isCampaignManager = isCampaignManager(initiativeId);
@@ -254,8 +259,9 @@ public class PlayerTeamService {
 		if (initiative == null) {
 			throw new NotFoundException("NO_INITIATIVE");
 		}
-		
-		List<PlayerTeam> list = teamRepo.findByNickname((String)team.getCustomData().get(KEY_NAME));
+		String name = (String)team.getCustomData().get(KEY_NAME);
+		name = escapeRegEx(name);
+		List<PlayerTeam> list = teamRepo.findByNickname(name);
 		if(list.size() > 0) {
 			if(StringUtils.hasText(team.getId())) {
 				if((list.size() > 1) || (!list.get(0).getId().equals(team.getId()))) {
