@@ -28,7 +28,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -349,47 +348,26 @@ public class PlayerTeamService {
 		if(!isAdmin()) {
 			throw new OperationNotPermittedException("TEAM");
 		}
-		String currentUser = securityHelper.getCurrentPreferredUsername();
+		
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
 			throw new NotFoundException("NO_INITIATIVE");
 		}
-
-		List<Initiative> userInitiatives = getInitativesForManager();
-		boolean isManager = userInitiatives.stream().anyMatch(i -> i.getInitiativeId().equals(initiativeId));
-		
-		Set<TeamMember> toRemove = new HashSet<>();
 		
 		PlayerTeam existing = teamRepo.findById(teamId).orElse(null);
 		if (existing == null) {
 			throw new NotFoundException("NO_TEAM");
 		}
-
-		if (!isManager && !existing.getOwner().equals(currentUser)) {
-			// throw access exception
-			throw new OperationNotPermittedException("OWNER");
-		} 
-			
-		if (!isManager && !Boolean.TRUE.equals(initiative.getCanEdit())) {
-			throw new OperationNotEnabledException("EDIT");
-		}
 		
+		if(existing.getMembers().size() > 0) {
+			throw new OperationNotEnabledException("TEAM_NOT_EMPTY");
+		}
+
 		if(!gamificationEngineService.deleteGroup(existing.getId(), initiative.getCampaign().getGameId())) {
 			throw new DataException("GAMIFICATION_TEAM");
 		}
 		engineService.deleteGroup(teamId);
 		
-		toRemove = new HashSet<>(existing.getMembers());
-		// remove not used
-		for (TeamMember tm: toRemove) {
-			if(tm.isSubscribed()) {
-				try {
-					engineService.unsubscribe(initiative.getInitiativeId(), tm.getNickname());
-				} catch (Exception e1) {
-					logger.error("Failed to remove subscription", e1);
-				}				
-			}
-		}
 		teamRepo.delete(existing);
 	}
 	

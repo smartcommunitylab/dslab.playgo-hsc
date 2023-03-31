@@ -74,6 +74,7 @@
 					    <v-card-actions>
 					      <v-btn v-if="!unauthorized && !loading" color="primary" text @click="editTeam(team)" th:text="#{teammgmt.btn_edit}">Edit</v-btn>
 					      <v-btn v-if="isAdmin && !loading" color="error" text @click="removePlayer(team)" th:text="#{teammgmt.btn_remove_player}">Remove player</v-btn>
+					      <v-btn v-if="isAdmin && !loading && (team.members.length == 0)" color="error" text @click="deleteTeam(team)" th:text="#{teammgmt.btn_remove_team}">Remove Team</v-btn>
 					    </v-card-actions>					    
 					  </v-card>
 		      </v-col>
@@ -219,6 +220,7 @@
     		  TEAM_SIZE_LABEL: TEAM_SIZE_LABEL,
     		  F_NAME_LABEL: F_NAME_LABEL,
     		  playerToRemove: null,
+    		  teamToRemove: null,
     		  fieldRules: [
     		        v => !!v || FIELD_REQUIRED
     		  ],
@@ -262,6 +264,7 @@
     	  this.errorLabels['CREATE'] = "[[#{rest.error.CREATE}]]";
     	  this.errorLabels['TEAM'] = "[[#{rest.error.TEAM}]]";
     	  this.errorLabels['PLAYER'] = "[[#{rest.error.PLAYER}]]";
+    	  this.errorLabels['TEAM_NOT_EMPTY'] = "[[#{rest.error.TEAM_NOT_EMPTY}]]";
     	  this.load();
       },
       computed: {
@@ -439,14 +442,24 @@
     		  window.open(`../../web/hsc/${this.initiativeId}`, '_blank');
     	  },
     	  deleteTeam(team) {
-    		  this.currTeam = team;
+					this.teamToRemove = Object.assign({}, team);
     		  this.deleteDialog = true;    		 
     	  },
     	  confirmDelete() {
-              axios.delete(`../../api/initiatives/${this.initiativeId}/team/${this.currTeam.id}`, conf).then((data) => {
-                  this.deleteDialog = false;
-                  this.load();
-              });
+						this.loading = true;
+						var url = "../../api/initiatives/" + this.initiativeId + "/team/" + this.teamToRemove.id;
+            axios.delete(url, conf).then((data) => {
+                this.deleteDialog = false;
+                this.loading = false;
+                this.load();
+            })
+            .catch(e => {
+							this.teamToRemove = null;
+							this.loading = false;
+              this.errorDialogCode = e.response.data.type;
+              this.errorDialogMsg = this.errorLabels[e.response.data.type];
+              this.errorDialog = true;								
+						});
     	  },
     	  back() {
     		  history.back();
