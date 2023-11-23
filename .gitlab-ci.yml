@@ -5,10 +5,8 @@ services:
 
 stages:
   - build
-  - container-build
   - test
-  - deploy-dev
-  - deploy-prod
+  - deploy
 
 variables:
   SECURE_LOG_LEVEL: info
@@ -63,11 +61,12 @@ container_scanning:
     GIT_STRATEGY: fetch
     DOCKER_USER: ""
     DOCKER_PASSWORD: ""
+    CS_IMAGE: smartcommunitylab/playngo-hsc:$CI_COMMIT_REF_NAME-latest
   rules:
      - if: '$CI_COMMIT_REF_NAME == "main"'
 
 backend-container-build:
-  stage: container-build
+  stage: build
   variables:
     BUILDKIT_PROGRESS: plain
     DOCKER_BUILDKIT: 1 
@@ -82,12 +81,12 @@ backend-container-build:
     - main
 
 deploy-dev:
-  stage: deploy-dev
+  stage: deploy
   image: 
     name: bitnami/kubectl:latest
     entrypoint: ['']
   environment:
-    name: platform-new
+    name: dslab
   script:
     - echo "deploy backend"
     - kubectl -n playngo-dev set image deployments/playngo-hsc playngo-hsc=$CONTAINER_IMAGE --record=true
@@ -96,12 +95,12 @@ deploy-dev:
     - dev
 
 deploy-prod:
-  stage: deploy-prod
+  stage: deploy
   image: 
     name: bitnami/kubectl:latest
     entrypoint: ['']
   environment:
-    name: platform-new
+    name: dslab
   script:
     - echo "deploy backend"
     - kubectl -n playngo-prod set image deployments/playngo-hsc playngo-hsc=$CONTAINER_IMAGE --record=true
