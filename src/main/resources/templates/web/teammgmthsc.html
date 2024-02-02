@@ -118,9 +118,9 @@
               <v-col cols="12">
                 <v-text-field :rules="[rules.required, rules.classNum]" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL+'*'" 
                 	min="1" max="30" required :disabled="editing && currTeam.isRunning" @wheel="$event.target.blur()"></v-text-field>
-                	<small><strong>Squadra studenti</strong>: inserisci il <strong>NUMERO TOTALE DI ALUNNI</strong> di cui la classe è composta.
-                	<br><strong>Squadra personale scolastico</strong>: Inserisci il numero totale di personale scolastico se inferiore a 30, altrimenti inserisci <strong>30</strong>. Se le adesioni superano 30, è necessario creare più squadre.
-                	<br><strong>Squadra studenti + team manager</strong>: inserisci il <strong>NUMERO TOTALE DI ALUNNI</strong> di cui la classe è composta <strong>+1</strong>.
+                	<small><strong><u>Squadra studenti</u></strong>: inserisci il <strong>NUMERO TOTALE DI ALUNNI</strong> di cui la classe è composta.
+                	<br><strong><u>Squadra personale scolastico</u></strong>: Inserisci il numero totale di personale scolastico se inferiore a 30, altrimenti inserisci <strong>30</strong>. Se le adesioni superano 30, è necessario creare più squadre.
+                	<br><strong><u>Squadra studenti + team manager</u></strong>: inserisci il <strong>NUMERO TOTALE DI ALUNNI</strong> di cui la classe è composta <strong>+1</strong>.
 									<br><strong>Attenzione!</strong>
 									<br>E' possibile iscriversi in UNA SOLA squadra. Docente che crea la squadra può entrare nella squadra dei ragazzi, ma in tal caso non può far parte dell'eventuale squadra docenti. 
 									<br>A gioco avviato il numero alunni non potrà più essere modificato</small>
