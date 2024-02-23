@@ -182,14 +182,21 @@ public class PlayerTeamService {
 	public List<Initiative> getTeamLeaderInitiatives() {
 		String email = securityHelper.getCurrentPreferredUsername();
 		List<Initiative> list = initiativeRepo.findAll();
-		List<Initiative> result = list.stream().filter(i -> isTeamManager(i, email)).collect(Collectors.toList());
+		List<Initiative> result = list.stream().filter(i -> i.getCampaign().currentlyActive()  && isTeamManager(i, email)).collect(Collectors.toList());
 		logger.info(String.format("getTeamLeaderInitiatives [%s]:%s", email, result));		
 		return result;
 	}
 	
 	public List<PlayerTeam> getPlayerTeamByOwner() {
 		String email = securityHelper.getCurrentPreferredUsername();
-		List<PlayerTeam> result = teamRepo.findByOwner(email);
+		List<PlayerTeam> list = teamRepo.findByOwner(email);
+		List<PlayerTeam> result = new ArrayList<>();
+		list.forEach(t -> {
+			Initiative initiative = initiativeRepo.findById(t.getInitiativeId()).orElse(null);
+			if((initiative != null) && (initiative.getCampaign().currentlyActive())) {
+				result.add(t);
+			}
+		});
 		result.forEach(t -> addSmallAvatar(t));
 		logger.info(String.format("getPlayerTeamByOwner [%s]:%s", email, result));
 		return result;
