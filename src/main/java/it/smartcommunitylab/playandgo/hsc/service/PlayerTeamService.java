@@ -193,7 +193,7 @@ public class PlayerTeamService {
 		List<PlayerTeam> result = new ArrayList<>();
 		list.forEach(t -> {
 			Initiative initiative = initiativeRepo.findById(t.getInitiativeId()).orElse(null);
-			if((initiative != null) && (initiative.getCampaign().currentlyActive())) {
+			if((initiative != null) && initiative.getCampaign().currentlyActive() && isTeamManager(initiative, email)) {
 				result.add(t);
 			}
 		});
