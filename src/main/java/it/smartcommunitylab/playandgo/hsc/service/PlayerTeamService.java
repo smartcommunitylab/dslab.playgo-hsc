@@ -255,14 +255,17 @@ public class PlayerTeamService {
 	}
 	
 	public PlayerTeam saveTeam(String initiativeId, PlayerTeam team) throws HSCError {
+		logger.info(String.format("saveTeam[%s]:%s - %s", initiativeId, team.getId(), team.getCustomData().get(KEY_NAME)));
 		String currentUser = securityHelper.getCurrentPreferredUsername();
 		boolean isCampaignManager = isCampaignManager(initiativeId);
 		boolean isTeamManager = isTeamManager(initiativeId);
 		if(!isCampaignManager && !isTeamManager) {
+			logger.error(String.format("saveTeam[%s]:TEAM NO ROLE", initiativeId));
 			throw new OperationNotPermittedException("TEAM");
 		}
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
+			logger.error(String.format("saveTeam[%s]:NO_INITIATIVE", initiativeId));
 			throw new NotFoundException("NO_INITIATIVE");
 		}
 		String name = (String)team.getCustomData().get(KEY_NAME);
@@ -271,13 +274,15 @@ public class PlayerTeamService {
 		if(list.size() > 0) {
 			if(StringUtils.hasText(team.getId())) {
 				if((list.size() > 1) || (!list.get(0).getId().equals(team.getId()))) {
+					logger.error(String.format("saveTeam[%s]:NAME %s", initiativeId, name));
 					throw new DataException("NAME");
 				}
 			} else {
+				logger.error(String.format("saveTeam[%s]:NAME %s", initiativeId, name));
 				throw new DataException("NAME");
 			}			
 		}
-
+				
 		team.setInitiativeId(initiativeId);
 		boolean isRunning = isRunning(initiativeId);
 		
@@ -287,17 +292,31 @@ public class PlayerTeamService {
 		if (team.getId() != null) {
 			PlayerTeam existing = teamRepo.findById(team.getId()).orElse(null);
 			if (existing == null) {
+				logger.error(String.format("saveTeam[%s]:NO_TEAM %s", initiativeId, team.getId()));
 				throw new NotFoundException("NO_TEAM");
 			}
 
 			if (!isCampaignManager && !existing.getOwner().equals(currentUser)) {
 				// throw access exception
+				logger.error(String.format("saveTeam[%s]:OWNER %s", initiativeId, team.getId()));
 				throw new OperationNotPermittedException("OWNER");
 			} 
 			
 			if (!Boolean.TRUE.equals(initiative.getCanEdit())) {
+				logger.error(String.format("saveTeam[%s]:EDIT %s", initiativeId, team.getId()));
 				throw new OperationNotEnabledException("EDIT");
 			}
+			//check existing member subscribed flag
+			for(TeamMember tm : team.getMembers()) {
+				for(TeamMember etm : existing.getMembers()) {
+					if(tm.getNickname().equals(etm.getNickname())) {
+						tm.setSubscribed(etm.isSubscribed());
+						tm.setUnregistered(etm.isUnregistered());
+						break;
+					}
+				}
+			}
+				
 			toRemove = new HashSet<>(existing.getMembers());
 			toRemove.removeAll(team.getMembers());
 			toAdd.removeAll(existing.getMembers());
@@ -312,11 +331,13 @@ public class PlayerTeamService {
 			team.setId(UUID.randomUUID().toString());
 			team.setOwner(currentUser);
 			if(!gamificationEngineService.createPlayer(team.getId(), initiative.getCampaign().getGameId(), true)) {
+				logger.error(String.format("saveTeam[%s]:GAMIFICATION_TEAM ADD %s", initiativeId, team.getId()));
 				throw new DataException("GAMIFICATION_TEAM");
 			}
 			try {
 				engineService.addGroup(team.getId(), initiative.getInitiativeId());
 			} catch (Exception e) {
+				logger.error(String.format("saveTeam[%s]:ENGINE_TEAM ADD %s", initiativeId, team.getId()));
 				throw new DataException("ENGINE_TEAM");
 			}
 		}
@@ -328,11 +349,13 @@ public class PlayerTeamService {
 		for (TeamMember tm : toRemove) {
 			if(tm.isSubscribed()) {
 				if(!gamificationEngineService.removePlayerToGroup(tm.getPlayerId(), team.getId(), initiative.getCampaign().getGameId())) {
+					logger.error(String.format("saveTeam[%s]:GAMIFICATION_PLAYER REMOVE %s", initiativeId, tm.getPlayerId()));
 					throw new DataException("GAMIFICATION_PLAYER");
 				}						
 				try {
 					engineService.unsubscribe(initiative.getInitiativeId(), tm.getNickname());
 				} catch (Exception e1) {
+					logger.error(String.format("saveTeam[%s]:ENGINE_PLAYER REMOVE %s", initiativeId, tm.getPlayerId()));
 					logger.error("Failed to remove subscription", e1);
 				}				
 			}
@@ -347,34 +370,44 @@ public class PlayerTeamService {
 		customData.put(KEY_TEAM_MAX_NUM, team.getExpected());
 		customData.put(KEY_TEAM_NUM, team.getMembers().size());
 		if(!gamificationEngineService.changeCustomData(team.getId(), initiative.getCampaign().getGameId(), customData)) {
+			logger.error(String.format("setGameMetadata[%s]:GAMIFICATION_CUSTOM_DATA %s", initiative.getInitiativeId(), team.getId()));
 			throw new DataException("GAMIFICATION_CUSTOM_DATA");
 		}
 	}
 	
 	public void deleteTeam(String initiativeId, String teamId) throws HSCError {
+		logger.info(String.format("deleteTeam[%s]:%s", initiativeId, teamId));
 		if(!isAdmin()) {
+			logger.error(String.format("deleteTeam[%s]:TEAM NO ROLE", initiativeId));
 			throw new OperationNotPermittedException("TEAM");
 		}
 		
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
+			logger.error(String.format("deleteTeam[%s]:NO_INITIATIVE", initiativeId));
 			throw new NotFoundException("NO_INITIATIVE");
 		}
 		
 		PlayerTeam existing = teamRepo.findById(teamId).orElse(null);
 		if (existing == null) {
+			logger.error(String.format("deleteTeam[%s]:NO_TEAM %s", initiativeId, teamId));
 			throw new NotFoundException("NO_TEAM");
 		}
 		
 		if(existing.getMembers().size() > 0) {
+			logger.error(String.format("deleteTeam[%s]:TEAM_NOT_EMPTY %s", initiativeId, teamId));
 			throw new OperationNotEnabledException("TEAM_NOT_EMPTY");
 		}
 
 		if(!gamificationEngineService.deleteGroup(existing.getId(), initiative.getCampaign().getGameId())) {
+			logger.error(String.format("deleteTeam[%s]:GAMIFICATION_TEAM REMOVE %s", initiativeId, teamId));
 			throw new DataException("GAMIFICATION_TEAM");
 		}
-		engineService.deleteGroup(teamId);
-		
+		try {
+			engineService.deleteGroup(teamId);
+		} catch (Exception e) {
+			logger.error(String.format("deleteTeam[%s]:ENGINE_PLAYER REMOVE %s", initiativeId, teamId));
+		}
 		teamRepo.delete(existing);
 	}
 	
@@ -391,6 +424,7 @@ public class PlayerTeamService {
 				.flatMap(Collection::stream)
 				.collect(Collectors.toSet());
 		if (!Collections.disjoint(registered, team.getMembers())) {
+			logger.error(String.format("validate[%s]:PLAYER %s", initiative.getInitiativeId(), team.getId()));
 			throw new DataException("PLAYER");
 		}
 	}
@@ -573,9 +607,11 @@ public class PlayerTeamService {
 	}
 	
 	public String subscribeTeamMember(String initiativeId, String nickname, String teamId) throws HSCError {
+		logger.info(String.format("subscribeTeamMember[%s]:%s", initiativeId, nickname));
 		if(securityHelper.checkAPIRole() || isAdmin(engineService.getUserRoles())) {
 			Initiative initiative = getInitiative(initiativeId);
 			if (initiative == null) {
+				logger.error(String.format("subscribeTeamMember[%s]:NO_INITIATIVE", initiativeId));
 				throw new NotFoundException("NO_INITIATIVE");
 			}
 			List<PlayerTeam> teams = teamRepo.findByInitiativeId(initiativeId);
@@ -583,15 +619,19 @@ public class PlayerTeamService {
 				for(TeamMember tm : team.getMembers()) {
 					if(tm.getNickname().equals(nickname)) {
 						if(tm.isSubscribed()) {
+							logger.error(String.format("subscribeTeamMember[%s]:PLAYER_ALREADY_SUBSCRIBED %s", initiativeId, nickname));
 							throw new DataException("PLAYER_ALREADY_SUBSCRIBED");
 						}
 						if(!team.getId().equals(teamId)) {
+							logger.error(String.format("subscribeTeamMember[%s]:TEAM_NOT_CORRECT %s", initiativeId, teamId));
 							throw new DataException("TEAM_NOT_CORRECT");
 						}
 						if(!gamificationEngineService.createPlayer(tm.getPlayerId(), initiative.getCampaign().getGameId(), false)) {
+							logger.error(String.format("subscribeTeamMember[%s]:GAMIFICATION-PLAYER %s", initiativeId, nickname));
 							throw new DataException("GAMIFICATION-PLAYER");
 						}
 						if(!gamificationEngineService.addPlayerToGroup(tm.getPlayerId(), team.getId(), initiative.getCampaign().getGameId())) {
+							logger.error(String.format("subscribeTeamMember[%s]:GAMIFICATION-PLAYER-TEAM %s", initiativeId, nickname));
 							throw new DataException("GAMIFICATION-PLAYER-TEAM");
 						}												
 						tm.setSubscribed(true);
@@ -600,8 +640,10 @@ public class PlayerTeamService {
 					}
 				}			
 			}
+			logger.error(String.format("subscribeTeamMember[%s]:PLAYER_NOT_PRESENT %s", initiativeId, nickname));
 			throw new NotFoundException("PLAYER_NOT_PRESENT");
 		}
+		logger.error(String.format("subscribeTeamMember[%s]:SUBSCRIBE NO ROLE", initiativeId));
 		throw new OperationNotEnabledException("SUBSCRIBE");
 	}
 	
@@ -743,13 +785,16 @@ public class PlayerTeamService {
 
 	public Object unsubscribeTeamMember(String initiativeId, String nickname) throws HSCError {
 		// TODO Auto-generated method stub
+		logger.info(String.format("unsubscribeTeamMember[%s]:%s", initiativeId, nickname));
 		return null;
 	}
 	
 	public void unregisterPlayer(String initiativeId, String playerId, String nickname) throws HSCError {
+		logger.info(String.format("unregisterPlayer[%s]:%s", initiativeId, nickname));
 		if(securityHelper.checkAPIRole() || isAdmin(engineService.getUserRoles())) {
 			Initiative initiative = getInitiative(initiativeId);
 			if (initiative == null) {
+				logger.error(String.format("unregisterPlayer[%s]:NO_INITIATIVE", initiativeId));
 				throw new NotFoundException("NO_INITIATIVE");
 			}
 			List<PlayerTeam> list = teamRepo.findByInitiativeId(initiativeId);
@@ -761,7 +806,10 @@ public class PlayerTeamService {
 						tm.setUnregistered(true);
 						if(tm.isSubscribed()) {
 							tm.setSubscribed(false);
-							gamificationEngineService.removePlayerToGroup(playerId, team.getId(), initiative.getCampaign().getGameId());
+							if(!gamificationEngineService.removePlayerToGroup(playerId, team.getId(), initiative.getCampaign().getGameId())) {
+								logger.error(String.format("unregisterPlayer[%s]:GAMIFICATION_PLAYER REMOVE %s - %s", initiativeId, playerId, team.getId()));
+								throw new DataException("GAMIFICATION_TEAM");
+							}
 						}
 						save = true;
 					}					
@@ -771,19 +819,24 @@ public class PlayerTeamService {
 				}
 			}
 		}
+		logger.error(String.format("unregisterPlayer[%s]:UNREGISTER NO ROLE", initiativeId));
 		throw new OperationNotEnabledException("UNREGISTER");		
 	}
 	
 	public void removePlayerFromTeam(String initiativeId, String teamId, String playerId) throws HSCError {
+		logger.info(String.format("removePlayerFromTeam[%s]:%s - %s", initiativeId, teamId, playerId));
 		if(!isAdmin()) {
+			logger.error(String.format("removePlayerFromTeam[%s]:REMOVE_PLAYER NO ROLE", initiativeId));
 			throw new OperationNotPermittedException("REMOVE_PLAYER");
 		}
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
+			logger.error(String.format("removePlayerFromTeam[%s]:NO_INITIATIVE", initiativeId));
 			throw new NotFoundException("NO_INITIATIVE");
 		}
 		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
 		if(team == null) {
+			logger.error(String.format("removePlayerFromTeam[%s]:NO_TEAM %s", initiativeId, teamId));
 			throw new NotFoundException("NO_TEAM");
 		}
 		TeamMember toRemove = null;
@@ -794,14 +847,17 @@ public class PlayerTeamService {
 					try {
 						engineService.removePlayerFromGroup(playerId, initiative.getInitiativeId());
 					} catch (Exception e) {
+						logger.error(String.format("removePlayerFromTeam[%s]:ENGINE_TEAM REMOVE %s", initiativeId, playerId));
 						throw new DataException("ENGINE_TEAM");
 					}
 					//remove from team in GE
 					if(!gamificationEngineService.removePlayerToGroup(playerId, team.getId(), initiative.getCampaign().getGameId())) {
+						logger.error(String.format("removePlayerFromTeam[%s]:GAMIFICATION_TEAM GROUP REMOVE %s - %s", initiativeId, playerId, teamId));
 						throw new DataException("GAMIFICATION_TEAM");
 					}
 					//remove player status in GE
 					if(!gamificationEngineService.removePlayer(playerId, initiative.getCampaign().getGameId())) {
+						logger.error(String.format("removePlayerFromTeam[%s]:GAMIFICATION_TEAM PLAYER REMOVE %s", initiativeId, playerId));
 						throw new DataException("GAMIFICATION_TEAM");
 					}
 				}
