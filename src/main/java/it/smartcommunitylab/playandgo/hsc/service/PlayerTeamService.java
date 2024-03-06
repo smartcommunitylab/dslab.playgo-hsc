@@ -440,6 +440,7 @@ public class PlayerTeamService {
 	}
 	
 	public void setInitiativeCreate(String initiativeId, boolean value) {
+		logger.info(String.format("setInitiativeCreate[%s]", initiativeId));
 		List<Initiative> initiatives = getInitativesForManager();
 		initiatives.stream().filter(i -> i.getInitiativeId().equals(initiativeId)).forEach(i -> {
 			i.setCanCreate(value);
@@ -448,6 +449,7 @@ public class PlayerTeamService {
 	}
 	
 	public void setInitiativeEdit(String initiativeId, boolean value) {
+		logger.info(String.format("setInitiativeEdit[%s]", initiativeId));
 		List<Initiative> initiatives = getInitativesForManager();
 		initiatives.stream().filter(i -> i.getInitiativeId().equals(initiativeId)).forEach(i -> {
 			i.setCanEdit(value);
@@ -461,6 +463,7 @@ public class PlayerTeamService {
 	 * @return
 	 */
 	public Initiative saveInitiative(String initiativeId, Initiative initiative) throws HSCError {
+		logger.info(String.format("saveInitiative[%s]", initiativeId));
 		if(!isCampaignManager(initiativeId)) {
 			throw new OperationNotPermittedException("CAMPAIGN");
 		}
@@ -715,11 +718,14 @@ public class PlayerTeamService {
 	}
 	
 	public Avatar uploadTeamAvatar(String teamId, MultipartFile data) throws HSCError {
+		logger.info(String.format("uploadTeamAvatar[%s]", teamId));
 		PlayerTeam team = teamRepo.findById(teamId).orElse(null);
 		if(team == null) {
+			logger.info(String.format("uploadTeamAvatar[%s]:NO_TEAM", teamId));
 			throw new NotFoundException("NO_TEAM");
 		}
 		if(!isCampaignManager(team.getInitiativeId()) && !isMyTeam(teamId)) {
+			logger.info(String.format("uploadTeamAvatar[%s]:TEAM NO ROLE", teamId));
 			throw new OperationNotPermittedException("TEAM");
 		}
 		return avatarService.uploadTeamAvatar(teamId, data);
