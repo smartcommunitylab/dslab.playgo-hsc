@@ -221,6 +221,7 @@ public class PlayerTeamService {
 	}
 
 	public Page<PlayerInfo> searchPlayers(String initiativeId, String txt, Pageable pageRequest) throws HSCError {
+		logger.info(String.format("searchPlayers[%s]:%s", initiativeId, txt));
 		try {
 			if(isCampaignManager(initiativeId) || isTeamManager(initiativeId)) {
 				Initiative initiative = getInitiative(initiativeId);
@@ -598,6 +599,7 @@ public class PlayerTeamService {
 	}
 	
 	public boolean checkSubscribeTeamMember(String initiativeId, String nickname) throws HSCError {
+		logger.info(String.format("checkSubscribeTeamMember[%s]:%s", initiativeId, nickname));
 		Initiative initiative = getInitiative(initiativeId);
 		if (initiative == null) {
 			throw new NotFoundException("NO_INITIATIVE");
