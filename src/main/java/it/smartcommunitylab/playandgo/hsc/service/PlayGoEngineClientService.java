@@ -18,7 +18,6 @@ package it.smartcommunitylab.playandgo.hsc.service;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
 
-import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -143,7 +142,7 @@ public class PlayGoEngineClientService {
 		return 
 		webClient.get()
 		.uri("/api/ext/territory/players?territory="+territory + "&size=" + pageRequest.getPageSize() 
-			+ "&txt="+(txt == null ? "" : URLEncoder.encode(txt.trim(), "UTF-8")))
+			+ "&txt="+(txt == null ? "" : txt.trim()))
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(ref)
@@ -163,7 +162,7 @@ public class PlayGoEngineClientService {
 
 	public CampaignSubscription subscribe(String campaignId, String nickName, Map<String, Object> campaignData) throws Exception {
 		return webClient.post()
-		.uri("/api/ext/campaign/subscribe/territory?campaignId="+campaignId+"&nickname="+URLEncoder.encode(nickName, "UTF-8"))
+		.uri("/api/ext/campaign/subscribe/territory?campaignId="+campaignId+"&nickname="+nickName)
 		.contentType(MediaType.APPLICATION_JSON)
 		.bodyValue(campaignData == null ? Collections.emptyMap() : campaignData)
 		.attributes(clientRegistrationId("oauthprovider"))
@@ -173,7 +172,7 @@ public class PlayGoEngineClientService {
 	}
 	public CampaignSubscription unsubscribe(String campaignId, String nickName) throws Exception {
 		return webClient.delete()
-		.uri("/api/ext/campaign/unsubscribe/territory?campaignId="+campaignId+"&nickname="+URLEncoder.encode(nickName, "UTF-8"))
+		.uri("/api/ext/campaign/unsubscribe/territory?campaignId="+campaignId+"&nickname="+nickName)
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(CampaignSubscription.class)
