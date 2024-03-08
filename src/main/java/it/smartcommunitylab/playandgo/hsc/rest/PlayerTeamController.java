@@ -114,7 +114,7 @@ public class PlayerTeamController {
 	}
 
 	@GetMapping("/api/initiatives/{initiativeId}/team/candidates")
-	public ResponseEntity<Page<PlayerInfo>> candidates(@PathVariable String initiativeId, @RequestParam(required = false) String txt, Pageable pageRequest) {
+	public ResponseEntity<Page<PlayerInfo>> candidates(@PathVariable String initiativeId, @RequestParam(required = false) String txt, Pageable pageRequest) throws HSCError {
 		return ResponseEntity.ok(teamService.searchPlayers(initiativeId, txt, pageRequest));
 	}
 	
