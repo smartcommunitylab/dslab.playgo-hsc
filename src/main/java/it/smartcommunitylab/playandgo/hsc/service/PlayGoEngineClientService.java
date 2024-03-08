@@ -18,6 +18,7 @@ package it.smartcommunitylab.playandgo.hsc.service;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
 
+import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -137,11 +138,12 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 	
-	public RestPage<PlayerInfo> getPlayers(String txt, String territory, Pageable pageRequest) {
+	public RestPage<PlayerInfo> getPlayers(String txt, String territory, Pageable pageRequest) throws Exception {
 		ParameterizedTypeReference<RestPage<PlayerInfo>> ref = new ParameterizedTypeReference<RestPage<PlayerInfo>>() {};
 		return 
 		webClient.get()
-		.uri("/api/ext/territory/players?territory="+territory + "&size=" + pageRequest.getPageSize() + "&txt="+(txt == null ? "" : txt.trim()))
+		.uri("/api/ext/territory/players?territory="+territory + "&size=" + pageRequest.getPageSize() 
+			+ "&txt="+(txt == null ? "" : URLEncoder.encode(txt.trim(), "UTF-8")))
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(ref)
@@ -159,9 +161,9 @@ public class PlayGoEngineClientService {
 		.block();
 	}
 
-	public CampaignSubscription subscribe(String campaignId, String nickName, Map<String, Object> campaignData) {
+	public CampaignSubscription subscribe(String campaignId, String nickName, Map<String, Object> campaignData) throws Exception {
 		return webClient.post()
-		.uri("/api/ext/campaign/subscribe/territory?campaignId="+campaignId+"&nickname="+nickName)
+		.uri("/api/ext/campaign/subscribe/territory?campaignId="+campaignId+"&nickname="+URLEncoder.encode(nickName, "UTF-8"))
 		.contentType(MediaType.APPLICATION_JSON)
 		.bodyValue(campaignData == null ? Collections.emptyMap() : campaignData)
 		.attributes(clientRegistrationId("oauthprovider"))
@@ -169,9 +171,9 @@ public class PlayGoEngineClientService {
 		.bodyToMono(CampaignSubscription.class)
 		.block();
 	}
-	public CampaignSubscription unsubscribe(String campaignId, String nickName) {
+	public CampaignSubscription unsubscribe(String campaignId, String nickName) throws Exception {
 		return webClient.delete()
-		.uri("/api/ext/campaign/unsubscribe/territory?campaignId="+campaignId+"&nickname="+nickName)
+		.uri("/api/ext/campaign/unsubscribe/territory?campaignId="+campaignId+"&nickname="+URLEncoder.encode(nickName, "UTF-8"))
 		.attributes(clientRegistrationId("oauthprovider"))
 		.retrieve()
 		.bodyToMono(CampaignSubscription.class)

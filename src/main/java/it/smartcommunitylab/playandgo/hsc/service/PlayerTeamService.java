@@ -220,34 +220,39 @@ public class PlayerTeamService {
 		return false;
 	}
 
-	public Page<PlayerInfo> searchPlayers(String initiativeId, String txt, Pageable pageRequest) {
-		if(isCampaignManager(initiativeId) || isTeamManager(initiativeId)) {
-			Initiative initiative = getInitiative(initiativeId);
-			if (initiative != null) {
-				Page<PlayerInfo> page = engineService.getPlayers(txt, initiative.getCampaign().getTerritoryId(), pageRequest);
-				if (page.hasContent()) {
-					final Set<TeamMember> members = teamRepo.findByInitiativeId(initiativeId)
-							.stream()
-							.map(t -> t.getMembers())
-							.flatMap(Collection::stream)
-							.collect(Collectors.toSet());
-					final Set<String> registered = members
-							.stream()
-							//.filter(t -> t.isSubscribed())
-							.map(t -> t.getNickname())
-							.collect(Collectors.toSet());
-					List<PlayerInfo> result = new ArrayList<>();
-					page.getContent().forEach(p -> {
-						if(!registered.contains(p.getNickname())) {
-							result.add(p);
-						}
-					});
-					return new PageImpl<>(result, pageRequest, result.size());
-				}
-				return page;
-			}			
+	public Page<PlayerInfo> searchPlayers(String initiativeId, String txt, Pageable pageRequest) throws HSCError {
+		try {
+			if(isCampaignManager(initiativeId) || isTeamManager(initiativeId)) {
+				Initiative initiative = getInitiative(initiativeId);
+				if (initiative != null) {
+					Page<PlayerInfo> page = engineService.getPlayers(txt, initiative.getCampaign().getTerritoryId(), pageRequest);
+					if (page.hasContent()) {
+						final Set<TeamMember> members = teamRepo.findByInitiativeId(initiativeId)
+								.stream()
+								.map(t -> t.getMembers())
+								.flatMap(Collection::stream)
+								.collect(Collectors.toSet());
+						final Set<String> registered = members
+								.stream()
+								//.filter(t -> t.isSubscribed())
+								.map(t -> t.getNickname())
+								.collect(Collectors.toSet());
+						List<PlayerInfo> result = new ArrayList<>();
+						page.getContent().forEach(p -> {
+							if(!registered.contains(p.getNickname())) {
+								result.add(p);
+							}
+						});
+						return new PageImpl<>(result, pageRequest, result.size());
+					}
+					return page;
+				}			
+			}
+			return Page.empty();			
+		} catch (Exception e) {
+			logger.error(String.format("searchPlayers[%s]:ENGINE_SEARCH %s", initiativeId, txt));
+			throw new DataException("ENGINE_SEARCH:" + e.getMessage());
 		}
-		return Page.empty();
 	}
 	
 	private String escapeRegEx(String s) {
