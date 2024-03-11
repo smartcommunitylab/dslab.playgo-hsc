@@ -305,7 +305,16 @@
     		  if (val && val.length > 1) {
              clearTimeout(this.timerId);
              this.timerId = setTimeout(() => {
-               axios.get(`../api/initiatives/${this.currInitiativeId}/team/candidates?size=50&txt=${!!val ? val :''}`, conf).then((data) => {
+							var confParam = {
+								headers: {
+    							Authorization: `Bearer ${token}`
+    						},
+    						params: {
+									size: 50,
+									txt: `${!!val ? val :''}`
+								}						
+    					}
+               axios.get(`../api/initiatives/${this.currInitiativeId}/team/candidates`, confParam).then((data) => {
                   var remote = data.data.content.map(c => {
                     c.disabled = c.subscribed && (!this.currTeam || this.currTeam.members.some(m => m.nickname == c.nickname));
                     return c;
