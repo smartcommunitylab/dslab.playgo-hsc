@@ -39,6 +39,8 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.DefaultUriBuilderFactory.EncodingMode;
 
 import io.swagger.annotations.ApiParam;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -129,10 +131,14 @@ public class AppConfig implements WebMvcConfigurer {
 	    final ExchangeStrategies strategies = ExchangeStrategies.builder()
 	        .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(size))
 	        .build();
+		DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory(engineUri);
+		factory.setEncodingMode(EncodingMode.NONE);
+	    
 	    return WebClient.builder()
 	      .baseUrl(engineUri)
 	      .exchangeStrategies(strategies)
 	      .apply(oauth.oauth2Configuration())
+	      .uriBuilderFactory(factory)
 	      .build();
 	}
 	
