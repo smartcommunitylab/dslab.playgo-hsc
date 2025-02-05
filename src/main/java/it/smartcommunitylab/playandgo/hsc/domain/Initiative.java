@@ -39,9 +39,11 @@ public class Initiative {
 	private Double bonus;
 	private Double bonusThreshold;
 	private Integer maxTeamSize;
+	private Integer minTeamSize;
 	
 	private List<String> teamLeaderDomainList = new ArrayList<>();
 	private List<String> teamLeaderList = new ArrayList<>();
+	private List<String> teamTypeList = new ArrayList<>();
 	
 	public String getInitiativeId() {
 		return initiativeId;
@@ -107,5 +109,17 @@ public class Initiative {
 	@Override
 	public String toString() {
 		return initiativeId + "_" + type;
+	}
+	public Integer getMinTeamSize() {
+		return minTeamSize;
+	}
+	public void setMinTeamSize(Integer minTeamSize) {
+		this.minTeamSize = minTeamSize;
+	}
+	public List<String> getTeamTypeList() {
+		return teamTypeList;
+	}
+	public void setTeamTypeList(List<String> teamTypeList) {
+		this.teamTypeList = teamTypeList;
 	}
 }
