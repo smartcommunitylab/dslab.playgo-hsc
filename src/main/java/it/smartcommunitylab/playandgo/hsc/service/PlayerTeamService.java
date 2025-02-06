@@ -478,8 +478,10 @@ public class PlayerTeamService {
 			//old.setBonus(initiative.getBonus());
 			//old.setBonusThreshold(initiative.getBonusThreshold());
 			old.setMaxTeamSize(initiative.getMaxTeamSize());
+			old.setMinTeamSize(initiative.getMinTeamSize());
 			old.setTeamLeaderDomainList(initiative.getTeamLeaderDomainList());
 			old.setTeamLeaderList(initiative.getTeamLeaderList());
+			old.setTeamTypeList(initiative.getTeamTypeList());
 			return initiativeRepo.save(old);
 		}
 		return null;

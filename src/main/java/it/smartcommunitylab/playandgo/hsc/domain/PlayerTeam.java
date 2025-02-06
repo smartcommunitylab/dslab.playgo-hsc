@@ -34,6 +34,7 @@ public class PlayerTeam {
 	private String id;
 	private String initiativeId;
 	private String owner;
+	private String type;
 	private Set<TeamMember> members = Collections.emptySet();
 	private Integer expected;
 	
@@ -97,5 +98,11 @@ public class PlayerTeam {
 	@Override
 	public String toString() {
 		return id + "_" + initiativeId;
+	}
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
 	}
 }

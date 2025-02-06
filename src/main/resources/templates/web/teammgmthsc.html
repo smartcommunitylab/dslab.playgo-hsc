@@ -21,6 +21,7 @@
       F_NAME_LABEL = [[#{teamboard.hsc.name}]];
       F_DESC_LABEL = [[#{teamboard.hsc.desc}]];
       F_CAMPAIGN_LABEL = [[#{teamboard.hsc.campaign}]];
+      F_TYPE_LABEL = [[#{teamboard.hsc.type}]];
       /*]]>*/
     </script>
     
@@ -114,7 +115,12 @@
 	              <v-file-input v-model="avatar" label="Avatar"></v-file-input>
 	              <small>Inserisci un'immagine per contraddistinguere la tua squadra nelle varie schermate della mobile app come classifiche e altro. Si consiglia di usare immagini di proporzioni pressoché quadrate.</small>
               </v-col>
+
+              <v-col cols="12">
+	              <v-combobox outlined :rules="fieldRules" v-model="currTeam.type" :items="getTeamTypes()" :label="F_TYPE_LABEL"></v-combobox>
+              </v-col>
               
+              <!-- impostato a numero massimo di studenti
               <v-col cols="12">
                 <v-text-field :rules="[rules.required, rules.classNum]" type="number" v-model="currTeam.expected" :persistent-hint="true" :label="TEAM_SIZE_LABEL+'*'" 
                 	min="1" max="30" required :disabled="editing && currTeam.isRunning" @wheel="$event.target.blur()"></v-text-field>
@@ -125,6 +131,8 @@
 									<br>E' possibile iscriversi in UNA SOLA squadra. Docente che crea la squadra può entrare nella squadra dei ragazzi, ma in tal caso non può far parte dell'eventuale squadra personale scolastico. 
 									<br>A gioco avviato il numero alunni non potrà più essere modificato</small>
               </v-col>
+              -->
+              
               <v-col cols="12">
 	              <v-autocomplete v-model="currTeam.members" :error-count="3" :search-input.sync="searchInput" :rules="[rules.required, rules.membersNum]" 
 	              	:items="teamCandidates" item-text="nickname" item-disabled="disabled" hide-no-data
@@ -275,7 +283,8 @@
 					let i = this.getInitiative(this.currInitiativeId);
 					if(i) {
 						let b = this.currTeam && this.currTeam.members 
-    		    && (this.currTeam.members.length <= this.currTeam.expected) 
+    		    && (this.currTeam.members.length <= i.maxTeamSize)
+    		    && (this.currTeam.members.length >= i.minTeamSize)
     		    return b;
 					} 
     		  return true;
@@ -284,7 +293,7 @@
 					if(this.currInitiativeId) {
 						let i = this.getInitiative(this.currInitiativeId);
 						if(i) {
-							return TEAM_SIZE_ERROR.replace(/\{0\}/g, i.maxTeamSize);
+							return TEAM_SIZE_ERROR.replace(/\{min\}/g, i.minTeamSize).replace(/\{max\}/g, i.maxTeamSize);
 						}
 					}
     		  return ''; 
@@ -347,6 +356,7 @@
 								let i = initiativeMap[t.initiativeId];
 								let now = Date.now();
 								t.isRunning = (i.campaign.dateFrom <= now) && (i.campaign.dateTo >= now);  
+								t.expected = i.maxTeamSize
 							});
 						});	  						  	
           }).catch(err => {
@@ -463,6 +473,13 @@
                   this.load();
               });
     	  },
+    	  getTeamTypes() {
+					let i = this.getInitiative(this.currInitiativeId);
+					if(i) {
+						return i.teamTypeList;
+					}
+					return [];
+				},    	  
     	  back() {
     		  history.back();
     	  }
