@@ -65,7 +65,7 @@
 					        <v-list-item-title><span><strong>{{F_NAME_LABEL}}: {{team.customData['name']}}</strong></span></v-list-item-title>
 					        <v-list-item-title><span th:text="#{teamboard.hsc.desc}"></span>: {{team.customData['desc']}}</v-list-item-title>
                   <v-list-item-title><span th:text="#{teammgmt.owner}"></span>: {{team.owner}}</v-list-item-title>
-                  <v-list-item-title><span th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle>
+                  <!--v-list-item-title><span th:text="#{teammgmt.total}"></span>: {{team.expected}}</v-list-item-subtitle-->
 					        <v-list-item-title>{{(team.members || []).length}} <span th:text="#{teammgmt.members}">members</span> <span v-if="team.members && team.members.length > 0">({{getTeamMemberList(team)}})</span></v-list-item-subtitle>
 					      </v-list-item-content>
 								<v-avatar size="125" tile>
@@ -109,7 +109,7 @@
               </v-col>
               
               <v-col cols="12">
-	              <v-combobox outlined :rules="fieldRules" v-model="currTeam.type" :items="getTeamTypes()" :label="F_TYPE_LABEL"></v-combobox>
+	              <v-combobox outlined v-model="currTeam.type" :items="getTeamTypes()" :label="F_TYPE_LABEL"></v-combobox>
               </v-col>
               
      					<!-- impostato a numero massimo di studenti
