@@ -618,7 +618,7 @@ public class PlayerTeamService {
 		return registered.contains(nickname);			
 	}
 	
-	public String subscribeTeamMember(String initiativeId, String nickname, String teamId) throws HSCError {
+	public synchronized String subscribeTeamMember(String initiativeId, String nickname, String teamId) throws HSCError {
 		logger.info(String.format("subscribeTeamMember[%s]:%s", initiativeId, nickname));
 		if(securityHelper.checkAPIRole() || isAdmin(engineService.getUserRoles())) {
 			Initiative initiative = getInitiative(initiativeId);
@@ -804,7 +804,7 @@ public class PlayerTeamService {
 		return null;
 	}
 	
-	public void unregisterPlayer(String initiativeId, String playerId, String nickname) throws HSCError {
+	public synchronized void unregisterPlayer(String initiativeId, String playerId, String nickname) throws HSCError {
 		logger.info(String.format("unregisterPlayer[%s]:%s", initiativeId, nickname));
 		if(securityHelper.checkAPIRole() || isAdmin(engineService.getUserRoles())) {
 			Initiative initiative = getInitiative(initiativeId);
